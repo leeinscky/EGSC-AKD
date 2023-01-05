@@ -126,17 +126,22 @@ def parameter_parser():
     parser.add_argument("--d-critic",
                             type=int,
                             default=1,
-                            help="train discriminator")
+                            help="discriminator critic")
 
     parser.add_argument("--g-critic",
                             type=int,
                             default=1,
-                            help="train generator")
+                            help="generator critic")
     
     parser.add_argument("--use-adversarial",
                             type=int,
                             default=1,
-                            help="train generator")
+                            help="use adversarial")
+
+    parser.add_argument("--wandb",
+                            type=int,
+                            default=1,
+                            help="use wandb")
 
     parser.set_defaults(histogram=False)
     parser.set_defaults(diffpool=False)

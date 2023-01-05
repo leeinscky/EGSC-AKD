@@ -57,7 +57,7 @@ def tab_printer(args):
     print(t.draw())
 
 
-def calculate_ranking_correlation(rank_corr_function, prediction, target):
+def calculate_ranking_correlation(rank_corr_function, prediction, target): # 这个函数是计算 Spearman's rank correlation coefficient, 即计算预测值和真实值的相关性, 值越大相关性越大，值越小相关性越小，值为 0 时表示两者无关，值为 1 时表示两者完全相关，值为 -1 时表示两者完全负相关
     """
     Calculating specific ranking correlation for predicted values.
     :param rank_corr_function: Ranking correlation function.

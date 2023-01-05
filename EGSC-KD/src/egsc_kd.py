@@ -20,6 +20,10 @@ from model_kd import EGSC_generator, EGSC_fusion, EGSC_fusion_classifier, EGSC_c
 
 import pdb
 from layers import RkdDistance, RKdAngle, repeat_certain_graph
+import wandb
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 
 class EGSC_KD_Trainer(object):
     def __init__(self, args):
@@ -33,12 +37,12 @@ class EGSC_KD_Trainer(object):
         self.best_model_error = float('inf')
 
     def setup_model(self):
-        self.model_g = EGSC_generator(self.args, self.number_of_labels)
-        self.model_f = EGSC_fusion(self.args, self.number_of_labels)
-        self.model_c = EGSC_classifier(self.args, self.number_of_labels)
-        self.model_c1 = EGSC_fusion_classifier(self.args, self.number_of_labels)
-        self.model_g_fix = EGSC_teacher(self.args, self.number_of_labels) # number_of_labels = 29
-        self.Discriminator = logits_D(16, 16)
+        self.model_g = EGSC_generator(self.args, self.number_of_labels).to(device)
+        self.model_f = EGSC_fusion(self.args, self.number_of_labels).to(device)
+        self.model_c = EGSC_classifier(self.args, self.number_of_labels).to(device)
+        self.model_c1 = EGSC_fusion_classifier(self.args, self.number_of_labels).to(device)
+        self.model_g_fix = EGSC_teacher(self.args, self.number_of_labels).to(device) # number_of_labels = 29
+        self.Discriminator = logits_D(16, 16).to(device)
         """ print(f'[EGSC-KD/src/egsc_kd.py] self.model_g: {self.model_g}')
         print(f'[EGSC-KD/src/egsc_kd.py] self.model_f: {self.model_f}')
         print(f'[EGSC-KD/src/egsc_kd.py] self.model_c: {self.model_c}')
@@ -276,17 +280,6 @@ class EGSC_KD_Trainer(object):
         self.loss_RkdDistance = RkdDistance()
         self.loss_RKdAngle = RKdAngle()
 
-    # def save_model(self):
-    #     PATH_g = '../model_sel/G_' +str(self.args.dataset)+"_"+ str(round(self.model_error*1000, 5))+"_" \
-    #     + str(self.args.epochs)+"_"+str(self.args.batch_size)+"_"+str(self.args.learning_rate) +'_checkpoint.pth'
-    #     PATH_c = '../model_sel/C_' +str(self.args.dataset)+"_"+ str(round(self.model_error*1000, 5))+"_" \
-    #     + str(self.args.epochs)+"_"+str(self.args.batch_size)+"_"+str(self.args.learning_rate) +'_checkpoint.pth'
-        
-    #     torch.save(self.model_g.state_dict(), PATH_g)
-    #     torch.save(self.model_c.state_dict(), PATH_c)
-        
-    #     print('Model Saved')
-
     def load_model(self):
         PATH_g = '../Checkpoints/G_EarlyFusion_Disentangle_' +str(self.args.dataset) +'_gin'+'_checkpoint.pth'
 
@@ -368,21 +361,23 @@ class EGSC_KD_Trainer(object):
         data = self.transform(data)
         target = data["target"]
 
-        edge_index_1 = data["g1"].edge_index
-        edge_index_2 = data["g2"].edge_index
-        features_1 = data["g1"].x
-        features_2 = data["g2"].x
+        edge_index_1 = data["g1"].edge_index.to(device)
+        edge_index_2 = data["g2"].edge_index.to(device)
+        features_1 = data["g1"].x.to(device)
+        features_2 = data["g2"].x.to(device)
         batch_1 = data["g1"].batch if hasattr(data["g1"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g1"].num_nodes)
         batch_2 = data["g2"].batch if hasattr(data["g2"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g2"].num_nodes)
-
-        pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1)
-        pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2)
+        batch_1 = batch_1.to(device)
+        batch_2 = batch_2.to(device)
+        
+        pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(device)
+        pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(device)
 
         prediction = self.model_c(self.model_f(pooled_features_1_all, pooled_features_2_all))
         loss_reg = F.mse_loss(prediction, target, reduction='sum') #* 0.5
 
-        pooled_features_1 = self.model_g(edge_index_1, features_1, batch_1)
-        pooled_features_2 = self.model_g(edge_index_2, features_2, batch_2)
+        pooled_features_1 = self.model_g(edge_index_1, features_1, batch_1).to(device)
+        pooled_features_2 = self.model_g(edge_index_2, features_2, batch_2).to(device)
 
         feat_joint = self.model_f(pooled_features_1, pooled_features_2)
         feat_joint_1 = self.model_f(pooled_features_1, pooled_features_1)
@@ -644,10 +639,10 @@ class EGSC_KD_Trainer(object):
             loss_sum_kd = 0
             for index, batch_pair in tqdm(enumerate(batches), total=len(batches), desc = "Batches"):
                 if self.args.use_adversarial == 1:
-                    print('[EGSC-KD/src/egsc_kd.py] 准备执行 process_batch_adversarial 函数')
+                    # print('[EGSC-KD/src/egsc_kd.py] 准备执行 process_batch_adversarial 函数')
                     loss_score, loss_score_kd = self.process_batch_adversarial(batch_pair, epoch)
                 else:
-                    print('[EGSC-KD/src/egsc_kd.py] 准备执行 process_batch 函数')
+                    # print('[EGSC-KD/src/egsc_kd.py] 准备执行 process_batch 函数')
                     loss_score, loss_score_kd = self.process_batch(batch_pair)
                 main_index = main_index + batch_pair[0].num_graphs
                 loss_sum = loss_sum + loss_score
@@ -750,6 +745,14 @@ class EGSC_KD_Trainer(object):
         self.prec_at_20 = np.mean(prec_at_20_list).item()
         self.model_error = np.mean(scores).item()
         self.print_evaluation()
+        if self.args.wandb:
+            wandb.log({
+                "rho": self.rho,
+                "tau": self.tau,
+                "prec_at_10": self.prec_at_10,
+                "prec_at_20": self.prec_at_20,
+                "model_error": self.model_error,
+                "run index": i})
 
     def print_evaluation(self):
         """
