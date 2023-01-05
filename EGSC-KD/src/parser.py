@@ -123,6 +123,21 @@ def parameter_parser():
                             default="c0",
                             help="c0, c1")
 
+    parser.add_argument("--d-critic",
+                            type=int,
+                            default=1,
+                            help="train discriminator")
+
+    parser.add_argument("--g-critic",
+                            type=int,
+                            default=1,
+                            help="train generator")
+    
+    parser.add_argument("--use-adversarial",
+                            type=int,
+                            default=1,
+                            help="train generator")
+
     parser.set_defaults(histogram=False)
     parser.set_defaults(diffpool=False)
     parser.set_defaults(plot=False)

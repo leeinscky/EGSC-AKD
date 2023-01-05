@@ -76,15 +76,15 @@ def calculate_ranking_correlation(rank_corr_function, prediction, target):
     
     return rank_corr_function(r_prediction, r_target).correlation
     
-def _calculate_prec_at_k(k, target):
+def _calculate_prec_at_k(k, target): # 这个函数是计算 k 个最小的 GED 的 index，即 target 中最小的 k 个值的 index
     target_increase = np.sort(target)
     target_value_sel = (target_increase <= target_increase[k-1]).sum()
 
     if target_value_sel > k:
-        best_k_target = target.argsort()[:target_value_sel]
+        best_k_target = target.argsort()[:target_value_sel] # argsort() 返回的是从小到大的 index
     else:
-        best_k_target = target.argsort()[:k]
-    return best_k_target
+        best_k_target = target.argsort()[:k] # 即 target 中最小的 k 个值的 index
+    return best_k_target # 返回的是 target 中最小的 k 个值的 index
 
 
 def calculate_prec_at_k(k, prediction, target, target_ged):
@@ -95,7 +95,8 @@ def calculate_prec_at_k(k, prediction, target, target_ged):
     best_k_target = _calculate_prec_at_k(k, -target)
     best_k_target_ged = _calculate_prec_at_k(k, target_ged)
 
-    return len(set(best_k_pred).intersection(set(best_k_target_ged))) / k
+    # 返回的是 k 个预测值中，有多少个是在 k 个最小的 GED 中的，即预测值的准确率
+    return len(set(best_k_pred).intersection(set(best_k_target_ged))) / k # 计算best_k_pred和best_k_target_ged的交集，然后除以k，即为准确率
 
 def denormalize_sim_score(g1, g2, sim_score):
     """

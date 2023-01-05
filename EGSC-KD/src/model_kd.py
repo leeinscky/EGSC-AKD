@@ -289,3 +289,25 @@ class EGSC_teacher(torch.nn.Module):
         scores = F.relu(self.fully_connected_first(self.score_attention(scores)*scores + scores))
         
         return  scores
+
+class logits_D(torch.nn.Module):
+    def __init__(self, n_class, n_hidden):
+        super(logits_D, self).__init__()
+        # print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的初始化函数 输入参数n_class:', n_class, 'n_hidden:', n_hidden) # 输入参数n_class: 16 n_hidden: 16
+        self.n_class = n_class
+        self.n_hidden = n_hidden
+        self.lin = torch.nn.Linear(self.n_hidden, self.n_hidden) # torch.nn.Linear(in_features, out_features, bias=True) 
+        self.relu = torch.nn.ReLU() 
+        self.lin2 = torch.nn.Linear(self.n_hidden, self.n_class+1, bias=False) # 论文解释：the output of 𝐷l is a 𝐶 + 1 dimensional vector with the first 𝐶 for label prediction and the last for Real/Fake (namely teacher/student) indicator.
+
+    def forward(self, logits, temperature=1.0):
+        # print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 输入参数logits.shape:', logits.shape) # torch.Size([128, 16])
+        out = self.lin(logits / temperature)
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = self.lin(logits / temperature)后，输出out.shape:', out.shape)
+        out = logits + out
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = logits + out后，输出out.shape:', out.shape)
+        out = self.relu(out)
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = self.relu(out)后，输出out.shape:', out.shape)
+        dist = self.lin2(out)
+        # print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行dist = self.lin2(out)后，forward最终返回的dist.shape:', dist.shape) # torch.Size([128, 17])
+        return dist

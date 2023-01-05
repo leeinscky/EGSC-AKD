@@ -29,7 +29,7 @@ def tensor_match(src,tar):
 
 
 
-class ConfusionAttentionModule(torch.nn.Module):
+class ConfusionAttentionModule(torch.nn.Module): # 后续没有用到
     def __init__(self, args, dim_size):
         """
         :param args: Arguments object.
@@ -67,7 +67,7 @@ class ConfusionAttentionModule(torch.nn.Module):
         return score_batch # 128 * 1
 
 
-class SEAttentionModule(torch.nn.Module):
+class SEAttentionModule(torch.nn.Module): # 参考：CNN中注意力机制（PyTorch实现SE、ECA、CBAM）里的SE (Squeeze and Excitation）注意力机制 - CAD2010的文章 - 知乎 https://zhuanlan.zhihu.com/p/563549058
     def __init__(self, args, dim_size):
         super(SEAttentionModule, self).__init__()
         self.args = args
@@ -77,11 +77,11 @@ class SEAttentionModule(torch.nn.Module):
     def setup_weights(self):
         channel = self.dim_size*1
         reduction = 4
-        self.fc = nn.Sequential(
-                        nn.Linear(channel,  channel // reduction),
+        self.fc = nn.Sequential(# 该步骤使用两个全连接层，通过全连接层之间的非线性添加模型的复杂度，达到确定不同通道之间的权重作用
+                        nn.Linear(channel,  channel // reduction), # 为了减少计算量进行降维处理，将第一个全连接的输出采用输入的1/4或者1/16。
                         nn.ReLU(inplace = True),
                         nn.Linear(channel // reduction, channel),
-                        nn.Sigmoid()
+                        nn.Sigmoid() # 第二个全连接层采用Sigmoid激活函数，为了将权重中映射到（0，1）之间
                 )
 
     def forward(self, x):
@@ -89,7 +89,7 @@ class SEAttentionModule(torch.nn.Module):
         return x
 
 
-class AttentionModule_w_SE(torch.nn.Module):
+class AttentionModule_w_SE(torch.nn.Module): # 后续没有用到
     def __init__(self, args, dim_size):
         super(AttentionModule_w_SE, self).__init__()
         self.args = args
@@ -117,7 +117,7 @@ class AttentionModule_w_SE(torch.nn.Module):
         
         return scatter_('add', weighted, batch, dim_size=size)
 
-class AttentionModule(torch.nn.Module):
+class AttentionModule(torch.nn.Module): # 参考SimGNN/src/layers.py里的AttentionModule
     def __init__(self, args, dim_size):
         """
         :param args: Arguments object.
@@ -153,8 +153,7 @@ class AttentionModule(torch.nn.Module):
         size = batch[-1].item() + 1 if size is None else size # size is the quantity of batches: 128 eg
         mean = scatter_('mean', x, batch, dim_size=size) # dim of mean: 128 * 16
 
-        transformed_global = \
-        torch.tanh(torch.mm(mean, self.weight_matrix)) 
+        transformed_global = torch.tanh(torch.mm(mean, self.weight_matrix)) 
         coefs = torch.sigmoid((x * transformed_global[batch]).sum(dim=1)) # transformed_global[batch]: 1128 * 16; coefs: 1128 * 0
         weighted = coefs.unsqueeze(-1) * x 
 
@@ -167,7 +166,7 @@ class AttentionModule(torch.nn.Module):
         return torch.sigmoid(torch.matmul(x, transformed_global))
 
 
-class DenseAttentionModule(torch.nn.Module):
+class DenseAttentionModule(torch.nn.Module): # 后续没有用到
     def __init__(self, args):
         """
         :param args: Arguments object.
@@ -202,7 +201,7 @@ class DenseAttentionModule(torch.nn.Module):
         
         return weighted.sum(dim=1)
 
-class SETensorNetworkModule(torch.nn.Module):
+class SETensorNetworkModule(torch.nn.Module): #有用到
     def __init__(self,args, dim_size):
         super(SETensorNetworkModule, self).__init__()
         self.args = args
@@ -219,12 +218,12 @@ class SETensorNetworkModule(torch.nn.Module):
                         nn.Sigmoid()
                 )
 
-        self.fc0 = nn.Sequential(
+        """ self.fc0 = nn.Sequential(
                         nn.Linear(channel,  channel),
                         nn.ReLU(inplace = True),
                         nn.Linear(channel, channel),
                         nn.ReLU(inplace = True)
-                )
+                ) """
 
         self.fc1 = nn.Sequential(
                         nn.Linear(channel,  channel),
@@ -242,7 +241,7 @@ class SETensorNetworkModule(torch.nn.Module):
 
         return scores
 
-class TensorNetworkModule(torch.nn.Module):
+class TensorNetworkModule(torch.nn.Module): # 后续没有用到 和SimGNN/src/layers.py里的TensorNetworkModule逻辑一致。
     """
     SimGNN Tensor Network module to calculate similarity vector.
     """
@@ -283,7 +282,7 @@ class TensorNetworkModule(torch.nn.Module):
         return scores
 
 
-class Block(torch.nn.Module):
+class Block(torch.nn.Module): # 后续没有用到 在DiffPool中用到
     def __init__(self, in_channels, hidden_channels, out_channels, mode='cat'):
         super(Block, self).__init__()
 
@@ -318,7 +317,7 @@ class Block(torch.nn.Module):
         return self.lin(self.jump([x1, x2]))
 
 
-class DiffPool(torch.nn.Module):
+class DiffPool(torch.nn.Module): # 后续没有用到
     def __init__(self, args, num_nodes=10, num_layers=4, hidden=16, ratio=0.25):
         super(DiffPool, self).__init__()
         

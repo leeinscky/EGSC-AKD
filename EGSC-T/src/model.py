@@ -118,7 +118,8 @@ class EGSCT_generator(torch.nn.Module):
         return features_out
         
     def forward(self, data):
-
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，输入的data为{data}')
+        # print(f"[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，data[target].shape为{data['target'].shape}, data[target_ged].shape为{data['target_ged'].shape}")
         edge_index_1 = data["g1"].edge_index
         edge_index_2 = data["g2"].edge_index
         features_1 = data["g1"].x
@@ -128,28 +129,64 @@ class EGSCT_generator(torch.nn.Module):
         
         features_level1_1 = self.convolutional_pass_level1(edge_index_1, features_1)
         features_level1_2 = self.convolutional_pass_level1(edge_index_2, features_2)
-
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数， features_level1_1.shape为{features_level1_1.shape}, features_level1_2.shape为{features_level1_2.shape}')
+        
         pooled_features_level1_1 = self.attention_level1(features_level1_1, batch_1) # 128 * 64
         pooled_features_level1_2 = self.attention_level1(features_level1_2, batch_2) # 128 * 64
         scores_level1 = self.tensor_network_level1(pooled_features_level1_1, pooled_features_level1_2)
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，pooled_features_level1_1.shape为{pooled_features_level1_1.shape}, pooled_features_level1_2.shape为{pooled_features_level1_2.shape}, scores_level1.shape为{scores_level1.shape}')
 
         features_level2_1 = self.convolutional_pass_level2(edge_index_1, features_level1_1)
         features_level2_2 = self.convolutional_pass_level2(edge_index_2, features_level1_2)
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，features_level2_1.shape为{features_level2_1.shape}, features_level2_2.shape为{features_level2_2.shape}')
 
         pooled_features_level2_1 = self.attention_level2(features_level2_1, batch_1) # 128 * 32
         pooled_features_level2_2 = self.attention_level2(features_level2_2, batch_2) # 128 * 32
         scores_level2 = self.tensor_network_level2(pooled_features_level2_1, pooled_features_level2_2)
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，pooled_features_level2_1.shape为{pooled_features_level2_1.shape}, pooled_features_level2_2.shape为{pooled_features_level2_2.shape}, scores_level2.shape为{scores_level2.shape}')
 
         features_level3_1 = self.convolutional_pass_level3(edge_index_1, features_level2_1)
         features_level3_2 = self.convolutional_pass_level3(edge_index_2, features_level2_2)
         pooled_features_level3_1 = self.attention_level3(features_level3_1, batch_1) # 128 * 16
         pooled_features_level3_2 = self.attention_level3(features_level3_2, batch_2) # 128 * 16
         scores_level3 = self.tensor_network_level3(pooled_features_level3_1, pooled_features_level3_2)
-
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，pooled_features_level3_1.shape为{pooled_features_level3_1.shape}, pooled_features_level3_2.shape为{pooled_features_level3_2.shape}, scores_level3.shape为{scores_level3.shape}')
+        
         scores = torch.cat((scores_level3, scores_level2, scores_level1), dim=1)
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，scores.shape为{scores.shape}')
         
         scores = F.relu(self.fully_connected_first(self.score_attention(scores)*scores + scores))
+        # print(f'[EGSC-T/src/model.py] 生成器 EGSCT_generator 正在执行forward函数，最终返回的scores.shape={scores.shape}')
+
+        """ dataset AIDS700nef 打印信息汇总
+        输入的data为{
+                    'g1': DataBatch(
+                        edge_index=[2, 2252], i=[128], x=[1133, 29],
+                        num_nodes=1133, batch=[1133], ptr=[129]),
+                    'g2': DataBatch(
+                        edge_index=[2, 2224], i=[128], x=[1121, 29],
+                        num_nodes=1121, batch=[1121], ptr=[129]),
+                    'target': tensor([0.4966, 0.4066, 0.531...])  # data[target].shape为torch.Size([128])
+                    'target_ged': tensor([ 7.,  9.,  6.,  9., 13.,  9., ...]) # data[target_ged].shape为torch.Size([128])
+                }
+        features_level1_1.shape: torch.Size([1133, 64])
+        features_level1_2.shape: torch.Size([1121, 64])
+        pooled_features_level1_1.shape: torch.Size([128, 64])
+        pooled_features_level1_2.shape: torch.Size([128, 64])
+        scores_level1.shape: torch.Size([128, 32])
         
+        features_level2_1.shape: torch.Size([1133, 32])
+        features_level2_2.shape: torch.Size([1121, 32])
+        pooled_features_level2_1.shape: torch.Size([128, 32])
+        pooled_features_level2_2.shape: torch.Size([128, 32])
+        scores_level2.shape: torch.Size([128, 16])
+        
+        pooled_features_level3_1.shape: torch.Size([128, 16])
+        pooled_features_level3_2.shape: torch.Size([128, 16])
+        scores_level3.shape: torch.Size([128, 8])
+        
+        scores.shape: torch.Size([128, 56])
+        最终返回的scores.shape=torch.Size([128, 16]) """
         return  scores 
 
 class EGSCT_classifier(torch.nn.Module):
@@ -168,7 +205,7 @@ class EGSCT_classifier(torch.nn.Module):
         self.scoring_layer = torch.nn.Linear(self.args.bottle_neck_neurons, 1)
 
     def forward(self, scores):
-
         score = torch.sigmoid(self.scoring_layer(scores)).view(-1) # dim of score: 128 * 0
-
+        # print(f'[EGSC-T/src/model.py] 分类器 EGSCT_classifier 正在执行forward函数 输入scores的维度为{scores.shape}, 输出score的维度为{score.shape}')
+        #  输入scores的维度为torch.Size([128, 16]), 输出score的维度为torch.Size([128])
         return  score 
