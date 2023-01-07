@@ -119,9 +119,9 @@ class EGSC_fusion(torch.nn.Module):
 
     def setup_layers(self):
         self.filter_dim_all = self.args.filters_3 + self.args.filters_2 + self.args.filters_1
+        self.score_attention = SEAttentionModule(self.args, self.filter_dim_all * 2)
         self.feat_layer = torch.nn.Linear(self.filter_dim_all * 2, self.filter_dim_all)
         self.fully_connected_first = torch.nn.Linear(self.filter_dim_all, self.args.bottle_neck_neurons)
-        self.score_attention = SEAttentionModule(self.args, self.filter_dim_all * 2)
         
     def forward(self, pooled_features_1_all, pooled_features_2_all):
         scores = torch.cat((pooled_features_1_all,pooled_features_2_all),dim=1)
@@ -147,7 +147,7 @@ class EGSC_fusion_classifier(torch.nn.Module):
         scores = torch.sigmoid(self.scoring_layer(scores)).view(-1) # dim of score: 128 * 0
         return  scores 
 
-class EGSC_classifier(torch.nn.Module):
+class EGSC_classifier(torch.nn.Module): # 对应论文Figure3中的最后一个regression head：The regression head is a MLP which projects the joint embedding into the desired similarity.
     def __init__(self, args, number_of_labels):
         super(EGSC_classifier, self).__init__()
         self.args = args
@@ -157,14 +157,14 @@ class EGSC_classifier(torch.nn.Module):
         self.setup_layers()
 
     def setup_layers(self):
-        self.scoring_layer = torch.nn.Linear(self.args.bottle_neck_neurons, 1)
+        self.scoring_layer = torch.nn.Linear(self.args.bottle_neck_neurons, 1) # bottle_neck_neurons 是输入参数=16 The bottleneck in a neural network is just a layer with fewer neurons than the layer below or above it. Having such a layer encourages the network to compress feature representations (of salient features for the target variable) to best fit in the available space。A bottleneck layer is a layer that contains few nodes compared to the previous layers. It can be used to obtain a representation of the input with reduced dimensionality. An example of this is the use of autoencoders with bottleneck layers for nonlinear dimensionality reduction.
 
     def forward(self, scores):
         score = torch.sigmoid(self.scoring_layer(scores)).view(-1)
         return  score 
 
 
-class EGSC_teacher(torch.nn.Module):
+class EGSC_teacher(torch.nn.Module): # EGSC_teacher 相当于完成了学生网络里的model_g和model_f的融合
     def __init__(self, args, number_of_labels):
         super(EGSC_teacher, self).__init__()
         self.args = args
@@ -269,20 +269,19 @@ class EGSC_teacher(torch.nn.Module):
 
         pooled_features_level1_1 = self.attention_level1(features_level1_1, batch_1) # 128 * 64
         pooled_features_level1_2 = self.attention_level1(features_level1_2, batch_2) # 128 * 64
-        scores_level1 = self.tensor_network_level1(pooled_features_level1_1, pooled_features_level1_2)
+        scores_level1 = self.tensor_network_level1(pooled_features_level1_1, pooled_features_level1_2) # 对应论文里的第一个Embedding Fusion Net
 
         features_level2_1 = self.convolutional_pass_level2(edge_index_1, features_level1_1)
         features_level2_2 = self.convolutional_pass_level2(edge_index_2, features_level1_2)
-
         pooled_features_level2_1 = self.attention_level2(features_level2_1, batch_1) # 128 * 32
         pooled_features_level2_2 = self.attention_level2(features_level2_2, batch_2) # 128 * 32
-        scores_level2 = self.tensor_network_level2(pooled_features_level2_1, pooled_features_level2_2)
+        scores_level2 = self.tensor_network_level2(pooled_features_level2_1, pooled_features_level2_2) # 对应论文里的第2个Embedding Fusion Net
 
         features_level3_1 = self.convolutional_pass_level3(edge_index_1, features_level2_1)
         features_level3_2 = self.convolutional_pass_level3(edge_index_2, features_level2_2)
         pooled_features_level3_1 = self.attention_level3(features_level3_1, batch_1) # 128 * 16
         pooled_features_level3_2 = self.attention_level3(features_level3_2, batch_2) # 128 * 16
-        scores_level3 = self.tensor_network_level3(pooled_features_level3_1, pooled_features_level3_2)
+        scores_level3 = self.tensor_network_level3(pooled_features_level3_1, pooled_features_level3_2) # 对应论文里的第3个Embedding Fusion Net
 
         scores = torch.cat((scores_level3, scores_level2, scores_level1), dim=1)
 
@@ -297,17 +296,25 @@ class logits_D(torch.nn.Module):
         self.n_class = n_class
         self.n_hidden = n_hidden
         self.lin = torch.nn.Linear(self.n_hidden, self.n_hidden) # torch.nn.Linear(in_features, out_features, bias=True) 
-        self.relu = torch.nn.ReLU() 
+        self.relu = torch.nn.ReLU() # ReLU函数, 公式为: y = max(0, x), 输出的范围为[0, +∞), 用于多分类问题
+        self.sigmoid = torch.nn.Sigmoid() # torch.nn.Sigmoid 对输入的每个元素进行sigmoid函数运算, 公式为: y = 1 / (1 + exp(-x)), 输出的范围为[0, 1], 用于二分类问题, 例如: 0.5 > 0.5, 则为正例, 反之为负例, 一般用于最后一层, 用于计算loss, 例如: BCELoss, CrossEntropyLoss等
         self.lin2 = torch.nn.Linear(self.n_hidden, self.n_class+1, bias=False) # 论文解释：the output of 𝐷l is a 𝐶 + 1 dimensional vector with the first 𝐶 for label prediction and the last for Real/Fake (namely teacher/student) indicator.
 
     def forward(self, logits, temperature=1.0):
-        # print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 输入参数logits.shape:', logits.shape) # torch.Size([128, 16])
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 输入参数logits.shape:', logits.shape, 'logits:', logits) # torch.Size([128, 16])
         out = self.lin(logits / temperature)
         #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = self.lin(logits / temperature)后，输出out.shape:', out.shape)
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = self.lin(logits / temperature)后，输出out:', out)
         out = logits + out
         #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = logits + out后，输出out.shape:', out.shape)
-        out = self.relu(out)
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = logits + out后，输出out:', out)
+        if self.n_class == 16:
+            out = self.relu(out)
+        # elif self.n_class == 1:
+        #     out = self.sigmoid(out)
         #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = self.relu(out)后，输出out.shape:', out.shape)
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行out = self.relu(out)后，输出out:', out)
         dist = self.lin2(out)
         # print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行dist = self.lin2(out)后，forward最终返回的dist.shape:', dist.shape) # torch.Size([128, 17])
+        #print('[EGSC-KD/src/model_kd.py] 正在执行logits_D的forward函数 执行dist = self.lin2(out)后，forward最终返回的dist:', dist)
         return dist

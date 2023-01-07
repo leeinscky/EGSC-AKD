@@ -143,6 +143,15 @@ def parameter_parser():
                             default=1,
                             help="use wandb")
 
+    # parser.add_argument("--stu_loss_type",
+    #                         default="all",
+    #                         help="loss type")
+
+    parser.add_argument("--adversarial_ouput_class",
+                            type=int,
+                            default=16,
+                            help="prediction output class in adversarial network")
+
     parser.set_defaults(histogram=False)
     parser.set_defaults(diffpool=False)
     parser.set_defaults(plot=False)
