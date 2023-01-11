@@ -17,24 +17,25 @@ from torch_geometric.transforms import OneHotDegree
 
 import matplotlib.pyplot as plt
 
-from model_kd import EGSC_generator, EGSC_fusion, EGSC_fusion_classifier, EGSC_classifier, EGSC_teacher, logits_D
+from model_kd import EGSC_generator, EGSC_fusion, EGSC_fusion_classifier, EGSC_classifier, EGSC_teacher, logits_D, local_emb_D, global_emb_D
+
+from model_kd_light import EGSC_generator as EGSC_generator_light
+from model_kd_light import EGSC_fusion as EGSC_fusion_light
+from model_kd_light import EGSC_fusion_classifier as EGSC_fusion_classifier_light
+from model_kd_light import EGSC_classifier as EGSC_classifier_light
+from model_kd_light import EGSC_teacher as EGSC_teacher_light
+from model_kd_light import logits_D as logits_D_light
+from model_kd_light import global_emb_D as global_emb_D_light
+
 
 import pdb
 from layers import RkdDistance, RKdAngle, repeat_certain_graph
 import wandb
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-if device == 'cuda:0':
-    print('Using GPU')
-    wandb.config.device = 'GPU'
-elif device == 'cpu':
-    print('Using CPU')
-    wandb.config.device = 'CPU'
-
-
 class EGSC_KD_Trainer(object):
     def __init__(self, args):
         self.args = args
+        self.device = torch.device('cuda:{}'.format(self.args.cuda_id) if torch.cuda.is_available() else 'cpu')
         self.best_rho = 0
         self.best_tau = 0
         self.best_prec_at_10 = 0
@@ -43,13 +44,46 @@ class EGSC_KD_Trainer(object):
         self.process_dataset()
         self.setup_model()
 
+
     def setup_model(self):
-        self.model_g = EGSC_generator(self.args, self.number_of_labels).to(device)
-        self.model_f = EGSC_fusion(self.args, self.number_of_labels).to(device)
-        self.model_c = EGSC_classifier(self.args, self.number_of_labels).to(device)
-        self.model_c1 = EGSC_fusion_classifier(self.args, self.number_of_labels).to(device)
-        self.model_g_fix = EGSC_teacher(self.args, self.number_of_labels).to(device) # number_of_labels = 29
-        self.Discriminator = logits_D(self.args.adversarial_ouput_class, self.args.adversarial_ouput_class).to(device)
+        if self.args.light:
+            print('setup light model...')
+            self.model_g = EGSC_generator_light(self.args, self.number_of_labels)
+            self.model_f = EGSC_fusion_light(self.args, self.number_of_labels)
+            self.model_c = EGSC_classifier_light(self.args, self.number_of_labels)
+            self.model_c1 = EGSC_fusion_classifier_light(self.args, self.number_of_labels)
+            self.model_g_fix = EGSC_teacher_light(self.args, self.number_of_labels) # number_of_labels = 29
+            self.Discriminator = logits_D_light(self.args.adversarial_ouput_class, self.args.adversarial_ouput_class)
+            # self.Discriminator_e = local_emb_D(n_hidden=16)
+            self.Discriminator_g = global_emb_D_light(n_hidden=16)
+        else:
+            print('setup original model...')
+            self.model_g = EGSC_generator(self.args, self.number_of_labels)
+            self.model_f = EGSC_fusion(self.args, self.number_of_labels)
+            self.model_c = EGSC_classifier(self.args, self.number_of_labels)
+            self.model_c1 = EGSC_fusion_classifier(self.args, self.number_of_labels)
+            self.model_g_fix = EGSC_teacher(self.args, self.number_of_labels) # number_of_labels = 29
+            self.Discriminator = logits_D(self.args.adversarial_ouput_class, self.args.adversarial_ouput_class)
+            # self.Discriminator_e = local_emb_D(n_hidden=16)
+            self.Discriminator_g = global_emb_D(n_hidden=16)
+        
+        # if torch.cuda.device_count() > 1:  # 查看当前电脑的可用的gpu的数量，若gpu数量>1,就多gpu训练
+        #         self.model_g = torch.nn.DataParallel(self.model_g) #多gpu训练,自动选择gpu device_ids=[0,1,2,3]
+        #         self.model_f = torch.nn.DataParallel(self.model_f)
+        #         self.model_c = torch.nn.DataParallel(self.model_c)
+        #         self.model_c1 = torch.nn.DataParallel(self.model_c1)
+        #         # self.model_g_fix = torch.nn.DataParallel(self.model_g_fix)
+        #         self.Discriminator = torch.nn.DataParallel(self.Discriminator)
+        
+        self.model_g.to(self.device)
+        self.model_f.to(self.device)
+        self.model_c.to(self.device)
+        self.model_c1.to(self.device)
+        self.model_g_fix.to(self.device)
+        self.Discriminator.to(self.device)
+        # self.Discriminator_e.to(self.device)
+        self.Discriminator_g.to(self.device)
+        
         """ print(f'[EGSC-KD/src/egsc_kd.py] self.model_g: {self.model_g}')
         print(f'[EGSC-KD/src/egsc_kd.py] self.model_f: {self.model_f}')
         print(f'[EGSC-KD/src/egsc_kd.py] self.model_c: {self.model_c}')
@@ -282,16 +316,16 @@ class EGSC_KD_Trainer(object):
         )
         ) """
 
-
-
         self.loss_RkdDistance = RkdDistance()
         self.loss_RKdAngle = RKdAngle()
 
     def load_model(self):
         PATH_g = '../Checkpoints/G_EarlyFusion_Disentangle_' +str(self.args.dataset) +'_gin'+'_checkpoint.pth'
 
-        self.model_g_fix.load_state_dict(torch.load(PATH_g)) # load_state_dict使用 state_dict 反序列化模型参数字典。用来加载模型参数。将 state_dict 中的 parameters 和 buffers 复制到此 module 及其子节点中。 概况：给模型对象加载训练好的模型参数，即加载模型参数
-
+        # self.model_g_fix.load_state_dict(torch.load(PATH_g)) # load_state_dict使用 state_dict 反序列化模型参数字典。用来加载模型参数。将 state_dict 中的 parameters 和 buffers 复制到此 module 及其子节点中。 概况：给模型对象加载训练好的模型参数，即加载模型参数
+        # light
+        self.model_g_fix.load_state_dict(torch.load(PATH_g), strict=False)
+        
         print('Model Loaded')
         
     def process_dataset(self):
@@ -343,10 +377,11 @@ class EGSC_KD_Trainer(object):
         # edge_index: 用于存储节点之间的边，形状是 [2, num_edges]（  使用稀疏的方式存储边关系（edge_index中边的存储方式，有两个list，第 1 个list是边的起始点，第 2 个list是边的目标节点））；
         # x: 用于存储每个节点的特征，形状是[num_nodes, num_node_features]；
         # y: 存储样本标签。如果是每个节点都有标签，那么形状是[num_nodes, *]；如果是整张图只有一个标签，那么形状是[1, *]；
-        print(f'[EGSC-KD/src/egsc_kd.py] 正在执行process_dataset函数，self.training_graphs = {self.training_graphs}, len(self.training_graphs) = {len(self.training_graphs)}')
+        # print(f'[EGSC-KD/src/egsc_kd.py] 正在执行process_dataset函数，self.training_graphs = {self.training_graphs}, len(self.training_graphs) = {len(self.training_graphs)}')
         # AIDS数据集打印结果： self.training_graphs = AIDS700nef(560), len(self.training_graphs) = 560
 
     def create_batches(self):
+        print(f"self.args.synth = {self.args.synth}") # self.args.synth = False
         if self.args.synth:
             synth_data_ind = random.sample(range(len(self.synth_data_1)), 100)
         
@@ -355,7 +390,7 @@ class EGSC_KD_Trainer(object):
         target_loader = DataLoader(self.training_graphs.shuffle() + 
             ([self.synth_data_2[i] for i in synth_data_ind] if self.args.synth else []), batch_size=self.args.batch_size)
         
-        return list(zip(source_loader, target_loader))
+        return list(zip(source_loader, target_loader)) # zip()函数用于将可迭代的对象作为参数，将对象中对应的元素打包成一个个元组，然后返回由这些元组组成的对象
 
     def transform(self, data):
         new_data = dict()
@@ -449,25 +484,25 @@ class EGSC_KD_Trainer(object):
         self.optimizer_c1.zero_grad()
         
         data = self.transform(data)
-        target = data["target"].to(device)
+        target = data["target"].to(self.device)
 
-        edge_index_1 = data["g1"].edge_index.to(device)
-        edge_index_2 = data["g2"].edge_index.to(device)
-        features_1 = data["g1"].x.to(device)
-        features_2 = data["g2"].x.to(device)
+        edge_index_1 = data["g1"].edge_index.to(self.device)
+        edge_index_2 = data["g2"].edge_index.to(self.device)
+        features_1 = data["g1"].x.to(self.device)
+        features_2 = data["g2"].x.to(self.device)
         batch_1 = data["g1"].batch if hasattr(data["g1"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g1"].num_nodes)
         batch_2 = data["g2"].batch if hasattr(data["g2"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g2"].num_nodes)
-        batch_1 = batch_1.to(device)
-        batch_2 = batch_2.to(device)
+        batch_1 = batch_1.to(self.device)
+        batch_2 = batch_2.to(self.device)
         
-        pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(device)
-        pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(device)
+        pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(self.device)
+        pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(self.device)
 
-        prediction = self.model_c(self.model_f(pooled_features_1_all, pooled_features_2_all)).to(device)
+        prediction = self.model_c(self.model_f(pooled_features_1_all, pooled_features_2_all)).to(self.device)
         loss_reg = F.mse_loss(prediction, target, reduction='sum') #* 0.5
 
-        pooled_features_1 = self.model_g(edge_index_1, features_1, batch_1).to(device)
-        pooled_features_2 = self.model_g(edge_index_2, features_2, batch_2).to(device)
+        pooled_features_1 = self.model_g(edge_index_1, features_1, batch_1).to(self.device)
+        pooled_features_2 = self.model_g(edge_index_2, features_2, batch_2).to(self.device)
 
         feat_joint = self.model_f(pooled_features_1, pooled_features_2)
         feat_joint_1 = self.model_f(pooled_features_1, pooled_features_1)
@@ -531,32 +566,80 @@ class EGSC_KD_Trainer(object):
         self.opt_D.zero_grad()
         
         data = self.transform(data)
-        target = data["target"].to(device) # target计算原理: 遍历normalized_ged中的每个元素，将其取负数，然后取e的指数，最后将其转化为tensor, 因此target的值域为[0,1]，ged越大，target越小, 即target越小相似度越小，target越大相似度越大。normalized_ged的定义：/home/zl525/.conda/envs/Efficient_Graph_Similarity_Computation/lib/python3.9/site-packages/torch_geometric/datasets/ged_dataset.py：self.norm_ged = torch.load(path) path = osp.join(self.processed_dir, f'{self.name}_norm_ged.pt')
+        target = data["target"].to(self.device) # target计算原理: 遍历normalized_ged中的每个元素，将其取负数，然后取e的指数，最后将其转化为tensor, 因此target的值域为[0,1]，ged越大，target越小, 即target越小相似度越小，target越大相似度越大。normalized_ged的定义：/home/zl525/.conda/envs/Efficient_Graph_Similarity_Computation/lib/python3.9/site-packages/torch_geometric/datasets/ged_dataset.py：self.norm_ged = torch.load(path) path = osp.join(self.processed_dir, f'{self.name}_norm_ged.pt')
 
-        edge_index_1 = data["g1"].edge_index.to(device) # edge_index_1是g1的边索引，edge_index_2是g2的边索引 edge_index=[2, xxx]，其中第1个list是边的起点，第二个list是边的终点
-        edge_index_2 = data["g2"].edge_index.to(device)
-        features_1 = data["g1"].x.to(device)  # x: 用于存储每个节点的特征，形状是[num_nodes, num_node_features]
-        features_2 = data["g2"].x.to(device)
+        edge_index_1 = data["g1"].edge_index.to(self.device) # edge_index_1是g1的边索引，edge_index_2是g2的边索引 edge_index=[2, xxx]，其中第1个list是边的起点，第二个list是边的终点
+        edge_index_2 = data["g2"].edge_index.to(self.device)
+        features_1 = data["g1"].x.to(self.device)  # x: 用于存储每个节点的特征，形状是[num_nodes, num_node_features]  AIDS数据集：features_1.shape: torch.Size([800, 29]) 800 nodes, 29 features
+        features_2 = data["g2"].x.to(self.device)
+        test1 = hasattr(data["g1"], 'batch') # test1: True
+        test2 = hasattr(data["g2"], 'batch') # test2: True
         batch_1 = data["g1"].batch if hasattr(data["g1"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g1"].num_nodes)
         batch_2 = data["g2"].batch if hasattr(data["g2"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g2"].num_nodes)
-        batch_1 = batch_1.to(device)
-        batch_2 = batch_2.to(device)
+        batch_1 = batch_1.to(self.device)
+        batch_2 = batch_2.to(self.device)
 
-        pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(device)
-        pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(device)
+        # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，输入model_g之前 edge_index_1.shape={edge_index_1.shape}, features_1.shape={features_1.shape}, batch_1.shape={batch_1.shape}, edge_index_2.shape={edge_index_2.shape}, features_2.shape={features_2.shape}, batch_2.shape={batch_2.shape}")
+        # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，输入model_g之前 edge_index_1={edge_index_1}, features_1={features_1}, batch_1={batch_1}")
+        
+        """ 输入model_g之前的数据溯源和流转过程如下：
+        
+        create_batches函数如下：
+            def create_batches(self):
+                
+                source_loader = DataLoader(self.training_graphs.shuffle() + [], batch_size=self.args.batch_size) # batch_size=128
+                target_loader = DataLoader(self.training_graphs.shuffle() + [], batch_size=self.args.batch_size)
+                
+                return list(zip(source_loader, target_loader))
+        
+        batches = self.create_batches() # batches是一个list，每个元素是一个tuple，tuple中有两个元素，每个元素是一个DataBatch对象，DataBatch对象中有edge_index, x, batch, ptr, i等属性
+        
+        for index, batch_pair in tqdm(enumerate(batches), total=len(batches), desc = "Batches"):
+            if self.args.use_adversarial == 1:
+                loss_score, loss_score_kd = self.process_batch_adversarial(batch_pair, epoch)
+        
+        data = batch_pair
+        
+        data["g1"] = data[0]
+        data["g2"] = data[1]
+        data["g1"]: DataBatch(edge_index=[2, 2284], i=[128], x=[1139, 29], num_nodes=1139, batch=[1139], ptr=[129]), 
+        data["g2"]: DataBatch(edge_index=[2, 2224], i=[128], x=[1128, 29], num_nodes=1128, batch=[1128], ptr=[129]), 
+        
+        edge_index_1 = data["g1"].edge_index # 边索引
+        features_1 = data["g1"].x  # x表示节点特征
+        batch_1 = data["g1"].batch # batch表示节点个数
+        
+        edge_index_1.shape=torch.Size([2, 2276]), features_1.shape=torch.Size([1151, 29]), batch_1.shape=torch.Size([1151]),  # 1151代表1151个节点，29代表29个特征，2276代表2276条边
+        edge_index_2.shape=torch.Size([2, 2256]), features_2.shape=torch.Size([1133, 29]), batch_2.shape=torch.Size([1133])
+        
+        edge_index_1=tensor([[   0,    0,    1,  ..., 1150, 1150, 1150],
+                            [   3,    8,    6,  ..., 1144, 1147, 1149]]), 
+        features_1=tensor([[0., 0., 1.,  ..., 0., 0., 0.],
+                            [0., 0., 0.,  ..., 0., 0., 0.],
+                            [1., 0., 0.,  ..., 0., 0., 0.],
+                            ...,
+                            [0., 0., 0.,  ..., 0., 0., 0.],
+                            [0., 0., 0.,  ..., 0., 0., 0.],
+                            [0., 0., 1.,  ..., 0., 0., 0.]]), 
+        batch_1=tensor([  0,   0,   0,  ..., 127, 127, 127])
+        """
+        pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(self.device)
+        pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(self.device)
 
-        prediction = self.model_c(self.model_f(pooled_features_1_all, pooled_features_2_all)).to(device)
+        prediction = self.model_c(self.model_f(pooled_features_1_all, pooled_features_2_all)).to(self.device)
         loss_reg = F.mse_loss(prediction, target, reduction='sum') #* 0.5
         # print(f'[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，prediction.shape={prediction.shape}, target.shape={target.shape}') # AIDS数据集：prediction.shape=torch.Size([128]), target.shape=torch.Size([128])
         # label_loss = self.loss_fcn(prediction, target)
         label_loss = loss_reg
 
-        pooled_features_1 = self.model_g(edge_index_1, features_1, batch_1).to(device)
-        pooled_features_2 = self.model_g(edge_index_2, features_2, batch_2).to(device)
+        pooled_features_1 = self.model_g(edge_index_1, features_1, batch_1).to(self.device)
+        pooled_features_2 = self.model_g(edge_index_2, features_2, batch_2).to(self.device)
 
         feat_joint = self.model_f(pooled_features_1, pooled_features_2)
         feat_joint_1 = self.model_f(pooled_features_1, pooled_features_1)
         feat_joint_2 = self.model_f(pooled_features_2, pooled_features_2)
+        feat_1 = feat_joint-feat_joint_1
+        feat_2 = feat_joint-feat_joint_2
         
         # 测试
         test = self.model_c(feat_joint)
@@ -568,9 +651,7 @@ class EGSC_KD_Trainer(object):
         feat_joint_fix = self.model_g_fix(edge_index_1, features_1, batch_1, edge_index_2, features_2, batch_2).detach()
         feat_joint_fix_1 = self.model_g_fix(edge_index_1, features_1, batch_1, edge_index_1, features_1, batch_1).detach()
         feat_joint_fix_2 = self.model_g_fix(edge_index_2, features_2, batch_2, edge_index_2, features_2, batch_2).detach()
-        feat_1 = feat_joint-feat_joint_1
         feat_fix_1 = feat_joint_fix-feat_joint_fix_1
-        feat_2 = feat_joint-feat_joint_2
         feat_fix_2 = feat_joint_fix-feat_joint_fix_2
 
         if self.args.mode == "l1":
@@ -601,7 +682,6 @@ class EGSC_KD_Trainer(object):
         # ============================================
         #  Train Dis 即训练判别器，用来判断生成器生成的样本是真样本还是假样本。对这些生成的图片，G想要最小化D的输出，而D想要最大化D的输出, 两个网络的目的正好相反，呈现出对抗的姿态。因此这样的训练就叫做 对抗训练(adversarial training), 也叫做GAN。 https://zhuanlan.zhihu.com/p/114838349
         # ============================================
-        print('self.args.adversarial_ouput_class: ', self.args.adversarial_ouput_class)
         if epoch % self.args.d_critic == 0:
             loss_D = 0
             ## distinguish by Dl 
@@ -640,25 +720,62 @@ class EGSC_KD_Trainer(object):
                                 [-2.4196, -0.3791,  0.0000,  ...,  0.0000,  0.0000, -0.8565]]) """
             
             if self.args.adversarial_ouput_class == 1:
+                ###################### distinguish by Dl
                 # test option1: use prediction as stu_logits and target as tea_logits
                 stu_logits = prediction.unsqueeze(1)
                 tea_logits = target.unsqueeze(1)
                 # print(f'[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数 stu_logits.shape={stu_logits.shape}, tea_logits.shape={tea_logits.shape} stu_logits={stu_logits}, tea_logits={tea_logits}')
-                
                 self.Discriminator.train() # self.Discriminator本质是一个logits判别器，用来判断生成器生成的样本是真样本还是假样本。
                 stu_logits = stu_logits.detach() # logits.detach()是将logits的梯度设置为False，即不计算logits的梯度。为什么不计算logits的梯度呢？因为logits是生成器生成的样本，而生成器的目的是生成样本，而不是生成样本的梯度。所以不计算logits的梯度。？TODO
                 pos_z = self.Discriminator(tea_logits) # 将教师模型的输出tea_logits输入到logits判别器中，得到pos_z。这里的pos_z是一个二维张量，表示真样本的logits判别器的输出。
                 neg_z = self.Discriminator(stu_logits) # 将学生模型的输出stu_logits输入到logits判别器中，得到neg_z。这里的neg_z是一个二维张量，表示假样本的logits判别器的输出。
                 real_z = torch.sigmoid(pos_z[:, -1]) # 这里的real_z是一个一维张量，表示真样本的logits判别器的输出的最后一列，即真样本的logits判别器的输出的最后一个元素。[:, -1] it means you are taking all the rows and only the last column. -1 represents the last column. 
                 fake_z = torch.sigmoid(neg_z[:, -1]) # torch.sigmoid()是一个Sigmoid函数，用来将输入的张量中的每个元素转换为0到1之间的数。假样本的logits判别器的输出的最后一个元素。
-
                 # 关键点：能将real_z和全1矩阵进行loss计算的原因是real_z这个张量的每个元素都是pos_z的最后一个元素，代表了real/fake的判别结果，即对于判别器来说判断误差就是它认为的real的概率和1的差距，fake的概率和0的差距
                 ad_loss = self.loss_dis(real_z, torch.ones_like(real_z)) + self.loss_dis(fake_z, torch.zeros_like(fake_z)) # 对抗损失计算逻辑：真样本的logits判别器的输出的最后一个元素与1的交叉熵损失 + 假样本的logits判别器的输出的最后一个元素与0的交叉熵损失。为什么这样算呢？因为真样本的logits判别器的输出的最后一个元素应该趋近于1，而假样本的logits判别器的输出的最后一个元素应该趋近于0。
                 """ # 验证测试，将real_z和全0矩阵进行loss计算，将fake_z和全1矩阵进行loss计算，预计会影响最后的准确率？
                 ad_loss_1 = self.loss_dis(real_z, torch.zeros_like(real_z)) + self.loss_dis(fake_z, torch.ones_like(fake_z))
                 wandb.config.note="验证测试 dicriminator test" """
+                
+                ###################### distinguish by De (Discriminator_embedding)
+                # # graph1
+                # tea_model_node_emb = feat_fix_1.detach() # 教师模型的节点embedding
+                # stu_model_node_emb = feat_1.detach() # 学生模型的节点embedding feat_joint.shape=torch.Size([128, 16])
+                # self.Discriminator_e.train()
+                # print(f"tea_model_node_emb.shape={tea_model_node_emb.shape}, stu_model_node_emb.shape={stu_model_node_emb.shape}, data['g1']={data['g1']}")
+                # # AIDS数据集打印结果: tea_model_node_emb.shape=torch.Size([128, 16]), stu_model_node_emb.shape=torch.Size([128, 16]), data['g1']=DataBatch(edge_index=[2, 2276], i=[128], x=[1151, 29], num_nodes=1151, batch=[1151], ptr=[129])
+                # pos_e = self.Discriminator_e(tea_model_node_emb, data["g1"])
+                # neg_e = self.Discriminator_e(stu_model_node_emb, data["g1"])
+                # real_e = torch.sigmoid(pos_e)
+                # fake_e = torch.sigmoid(neg_e)
+                # ad_eloss_1 = self.loss_dis(real_e, torch.ones_like(real_e)) + self.loss_dis(fake_e, torch.zeros_like(fake_e))
+                
+                ###################### distinguish by Dg (Discriminator_graph)
+                # tea_model_node_emb = feat_fix_1.detach()
+                # stu_model_node_emb = feat_1.detach() 
 
-                loss_D = ad_loss
+                tea_model_node_emb = feat_joint_fix.detach()
+                stu_model_node_emb = feat_joint.detach()
+                
+                self.Discriminator_g.train()
+                tea_sum = torch.sigmoid(tea_model_node_emb.mean(dim=0)).unsqueeze(-1) # tea_sum.shape=torch.Size([16, 1]) unsqueeze(-1)指在最后一维增加一个维度 mean(dim=0)指在第0维求均值
+                pos_g = self.Discriminator_g(tea_model_node_emb, tea_sum)
+                neg_g = self.Discriminator_g(stu_model_node_emb, tea_sum)
+                real_g = torch.sigmoid(pos_g)
+                fake_g = torch.sigmoid(neg_g)
+                ad_gloss1 = self.loss_dis(real_g, torch.ones_like(real_g)) + self.loss_dis(fake_g, torch.zeros_like(fake_g))
+                # print('ad_gloss1:', ad_gloss1) # tensor(1.2143, grad_fn=<AddBackward0>)
+                
+                self.Discriminator_g.train()
+                stu_sum = torch.sigmoid(stu_model_node_emb.mean(dim=0)).unsqueeze(-1) # stu_sum.shape=torch.Size([16, 1])
+                pos_g = self.Discriminator_g(tea_model_node_emb, stu_sum)
+                neg_g = self.Discriminator_g(stu_model_node_emb, stu_sum)
+                real_g = torch.sigmoid(pos_g)
+                fake_g = torch.sigmoid(neg_g)
+                ad_gloss2 = self.loss_dis(real_g, torch.ones_like(real_g)) + self.loss_dis(fake_g, torch.zeros_like(fake_g))
+                
+                
+                loss_D = ad_loss + ad_gloss1 + ad_gloss2
             elif self.args.adversarial_ouput_class == 16:
                 # test option2: use feat_1 as stu_logits and feat_fix_1 as tea_logits
                 stu_logits_1 = feat_1
@@ -691,10 +808,10 @@ class EGSC_KD_Trainer(object):
             else:
                 raise ValueError("error: adversarial_ouput_class should be 1 or 16")
 
-            # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，正在训练判别器 pos_z.shape={pos_z.shape} neg_z.shape={neg_z.shape} pos_z[:, -1].shape = {pos_z[:, -1].shape} neg_z[:, -1].shape = {neg_z[:, -1].shape}, real_z.shape={real_z.shape}, fake_z.shape={fake_z.shape}")
+            # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数， 正在训练判别器 pos_z.shape={pos_z.shape} neg_z.shape={neg_z.shape} pos_z[:, -1].shape = {pos_z[:, -1].shape} neg_z[:, -1].shape = {neg_z[:, -1].shape}, real_z.shape={real_z.shape}, fake_z.shape={fake_z.shape}")
             # pos_z.shape=torch.Size([128, 17]) neg_z.shape=torch.Size([128, 17]) pos_z[:, -1].shape = torch.Size([128]) neg_z[:, -1].shape = torch.Size([128]), real_z.shape=torch.Size([128]), fake_z.shape=torch.Size([128])
             
-            # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，正在训练判别器 pos_z={pos_z} neg_z={neg_z} pos_z[:, -1] = {pos_z[:, -1]} neg_z[:, -1] = {neg_z[:, -1]}, real_z={real_z}, fake_z={fake_z}")
+            # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数， 正在训练判别器 pos_z={pos_z} neg_z={neg_z} pos_z[:, -1] = {pos_z[:, -1]} neg_z[:, -1] = {neg_z[:, -1]}, real_z={real_z}, fake_z={fake_z}")
             """ pos_z=tensor([[-0.4931, -1.4453,  0.8155,  ..., -2.5893,  2.6601, -0.5236],
                                 [ 0.1476, -0.3344,  0.1188,  ..., -0.3710,  0.5252, -0.4145],
                                 [ 0.1326, -0.5620,  0.2250,  ..., -0.9009,  1.0130, -0.5323],
@@ -816,7 +933,7 @@ class EGSC_KD_Trainer(object):
                 loss_G = 0.5 * (loss_G_1 + loss_G_2) # 两个生成器的损失相加。
             elif self.args.adversarial_ouput_class == 1:
                 loss_G = label_loss
-                ## to fool Discriminator_l
+                ###################### to fool Discriminator_l
                 self.Discriminator.eval() # 评估模式，不启用 BatchNormalization 和 Dropout。
                 pos_z = self.Discriminator(tea_logits) # 将教师模型的输出作为正样本，即真实样本。
                 neg_z = self.Discriminator(stu_logits) # 将学生模型的输出作为负样本，即生成样本。
@@ -829,7 +946,33 @@ class EGSC_KD_Trainer(object):
                 l1_loss = torch.norm(stu_logits - tea_logits, p=1) * 1. / len(tea_logits) # 计算生成样本与真实样本的L1范数。L1范数是指向量各个元素绝对值之和。通过和真实样本比较，来判断生成样本是不是越来越接近真实样本。
                 loss_G = loss_G + ad_loss + l1_loss # ad_loss全称adversarial loss，即对抗损失。ds_loss全称discriminator loss，即判别器损失。l1_loss全称L1 loss，即L1损失。
 
+                ###################### to fool Discriminator_g
+                self.Discriminator_g.eval()
+                # tea_model_node_emb = feat_fix_1.detach() # 教师模型的节点embedding # tea_model_node_emb.shape=torch.Size([128, 16])
+                # stu_model_node_emb = feat_1.detach() # 学生模型的节点embedding feat_joint.shape=torch.Size([128, 16])
+                
+                tea_model_node_emb = feat_joint_fix.detach() # 教师模型的节点embedding # tea_model_node_emb.shape=torch.Size([128, 16])
+                stu_model_node_emb = feat_joint.detach() # 学生模型的节点embedding feat_joint.shape=torch.Size([128, 16])
+                
+                tea_sum = torch.sigmoid(tea_model_node_emb.mean(dim=0)).unsqueeze(-1) # tea_sum.shape=torch.Size([16, 1])
+                neg_g = self.Discriminator_g(stu_model_node_emb, tea_sum)
+                fake_g = torch.sigmoid(neg_g)
+                ad_gloss1 = self.loss_dis(fake_g, torch.ones_like(fake_g))
+                
+                stu_sum = torch.sigmoid(stu_model_node_emb.mean(dim=0)).unsqueeze(-1) # stu_sum.shape=torch.Size([16, 1])
+                neg_g = self.Discriminator_g(tea_model_node_emb, stu_sum)
+                pos_g = self.Discriminator_g(stu_model_node_emb, stu_sum)
+                real_g = torch.sigmoid(pos_g)
+                fake_g = torch.sigmoid(neg_g)
+                ad_gloss2 = self.loss_dis(real_g, torch.zeros_like(real_g)) + self.loss_dis(fake_g, torch.ones_like(fake_g))
+                # print('ad_gloss1:', ad_gloss1, 'ad_gloss2:', ad_gloss2) 
+                loss_G = loss_G + ad_gloss1 + ad_gloss2
+
             # loss_G.backward() # 将loss_G反向传播，更新生成器的参数，使得生成器的损失函数loss_G最小化，即生成器生成的样本越来越接近真实样本。
+            
+            # loss = loss_G
+            # loss = loss_reg + loss_kd + loss_reg_rec 
+            loss = loss_reg + loss_kd + loss_reg_rec + loss_G
             if self.args.wandb:
                 wandb.log({
                     "loss_reg": loss_reg.item(),
@@ -837,10 +980,11 @@ class EGSC_KD_Trainer(object):
                     "loss_reg_rec": loss_reg_rec.item(),
                     "loss_D": loss_D.item(),
                     "loss_G": loss_G.item(),
+                    "loss": loss.item(),
                     "epoch": epoch,
                 })
 
-        loss = loss_G
+        # loss = loss_G
         # loss = loss_reg + loss_kd + loss_reg_rec 
         # loss = loss_reg + loss_kd + loss_reg_rec + loss_G
         if self.args.wandb:
@@ -850,7 +994,7 @@ class EGSC_KD_Trainer(object):
                 wandb.config.stu_loss_type = "loss_reg+loss_kd+loss_reg_rec"
             elif loss == loss_reg + loss_kd + loss_reg_rec + loss_G:
                 wandb.config.stu_loss_type = "loss_reg+loss_kd+loss_reg_rec+loss_G"
-            
+        
         loss.backward()
         self.optimizer_c1.step()
         self.optimizer_c.step()
@@ -1053,19 +1197,19 @@ class EGSC_KD_Trainer(object):
             target_ged = data["target_ged"]
             ground_truth_ged[i] = target_ged # 表示第i个测试图与训练集中的所有560个图的相似度，即560个数 （没有正则化）
 
-            edge_index_1 = data["g1"].edge_index.to(device)
-            edge_index_2 = data["g2"].edge_index.to(device)
-            features_1 = data["g1"].x.to(device)
-            features_2 = data["g2"].x.to(device)
+            edge_index_1 = data["g1"].edge_index.to(self.device)
+            edge_index_2 = data["g2"].edge_index.to(self.device)
+            features_1 = data["g1"].x.to(self.device)
+            features_2 = data["g2"].x.to(self.device)
             batch_1 = data["g1"].batch if hasattr(data["g1"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g1"].num_nodes)
             batch_2 = data["g2"].batch if hasattr(data["g2"], 'batch') else torch.tensor((), dtype=torch.long).new_zeros(data["g2"].num_nodes)
-            batch_1 = batch_1.to(device)
-            batch_2 = batch_2.to(device)
+            batch_1 = batch_1.to(self.device)
+            batch_2 = batch_2.to(self.device)
 
-            pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(device)
-            pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(device)
+            pooled_features_1_all = self.model_g(edge_index_1, features_1, batch_1).to(self.device)
+            pooled_features_2_all = self.model_g(edge_index_2, features_2, batch_2).to(self.device)
 
-            feat_joint = self.model_f(pooled_features_1_all, pooled_features_2_all).to(device)
+            feat_joint = self.model_f(pooled_features_1_all, pooled_features_2_all).to(self.device)
 
             prediction = self.model_c(feat_joint).cpu()
 

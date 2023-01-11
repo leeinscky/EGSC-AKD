@@ -97,18 +97,19 @@ class EGSC_generator(torch.nn.Module):
 
         features_level2 = self.convolutional_pass_level2(edge_index, features_level1)
 
-        abstract_features = self.convolutional_pass_level3(edge_index, features_level2)
+        # abstract_features = self.convolutional_pass_level3(edge_index, features_level2)
            
-        pooled_features = self.attention(abstract_features, batch) # 128 * 16 经过注意力机制后的特征
+        # pooled_features = self.attention(abstract_features, batch) # 128 * 16 经过注意力机制后的特征
  
+        pooled_features_level1 = self.attention_level1(features_level1, batch) # 128 * 64 经过注意力机制处理
+        
         pooled_features_level2 = self.attention_level2(features_level2, batch) # 128 * 32 经过注意力机制处理
 
-        pooled_features_level1 = self.attention_level1(features_level1, batch) # 128 * 64 经过注意力机制处理
-
-        pooled_features_all = torch.cat((pooled_features,pooled_features_level2,pooled_features_level1),dim=1) # 拼接特征
+        # pooled_features_all = torch.cat((pooled_features,pooled_features_level2,pooled_features_level1),dim=1) # 拼接特征
+        pooled_features_all = torch.cat((pooled_features_level2,pooled_features_level1),dim=1) # 拼接特征
         
         # self.node_embeddings = pooled_features_all
-        # print(f'[origin] pooled_features_all.shape: {pooled_features_all.shape}') # torch.Size([560, 112]) or torch.Size([48, 112]) 560 or 48 为batch_size 112为特征维度
+        # print(f'[light] pooled_features_all.shape: {pooled_features_all.shape}') # torch.Size([128, 96])
         return  pooled_features_all
 
 class EGSC_fusion(torch.nn.Module):
@@ -122,15 +123,16 @@ class EGSC_fusion(torch.nn.Module):
         # self.node_embeddings = None
 
     def setup_layers(self):
-        self.filter_dim_all = self.args.filters_3 + self.args.filters_2 + self.args.filters_1 # filters_1=64, filters_2=32, filters_3=16  64+32+16=112
-        self.score_attention = SEAttentionModule(self.args, self.filter_dim_all * 2) # self.filter_dim_all * 2 = 112 * 2 = 224
+        # self.filter_dim_all = self.args.filters_3 + self.args.filters_2 + self.args.filters_1
+        self.filter_dim_all = self.args.filters_2 + self.args.filters_1 # filters_1=64, filters_2=32 64+32=96
+        self.score_attention = SEAttentionModule(self.args, self.filter_dim_all * 2) # self.filter_dim_all * 2 = 96 * 2 = 192
         self.feat_layer = torch.nn.Linear(self.filter_dim_all * 2, self.filter_dim_all)
         self.fully_connected_first = torch.nn.Linear(self.filter_dim_all, self.args.bottle_neck_neurons)
         
     def forward(self, pooled_features_1_all, pooled_features_2_all):
         scores = torch.cat((pooled_features_1_all,pooled_features_2_all),dim=1) # 第一步：将两个图的特征拼接在一起
         # self.node_embeddings = scores
-        # print('[origin] scores.shape: ', scores.shape) # torch.Size([560, 224])
+        # print('[light] EGSC_fusion scores.shape: ', scores.shape) # torch.Size([128, 192])
         scores = self.feat_layer(self.score_attention(scores) + scores)  # 第二步：将拼接后的特征与注意力机制结合，再经过一个全连接层
         scores = F.relu(self.fully_connected_first(scores)) # 第三步：经过一个relu激活函数, relu激活函数的作用是将负数变为0，正数不变
         return  scores 
@@ -184,6 +186,9 @@ class EGSC_teacher(torch.nn.Module): # EGSC_teacher 相当于完成了学生网�
             self.feature_count = self.args.tensor_neurons + self.args.bins + self.dim_aug_feats
         else:
             self.feature_count = (self.args.filters_1 + self.args.filters_2 + self.args.filters_3 ) // 2
+            
+            # light
+            self.feature_count_light = (self.args.filters_1 + self.args.filters_2) // 2
 
     def setup_layers(self):
         self.calculate_bottleneck_features()
@@ -240,10 +245,14 @@ class EGSC_teacher(torch.nn.Module): # EGSC_teacher 相当于完成了学生网�
         self.tensor_network_level3 = SETensorNetworkModule(self.args,dim_size=self.args.filters_3 * self.scaler_dim)
         self.tensor_network_level2 = SETensorNetworkModule(self.args,dim_size=self.args.filters_2 * self.scaler_dim)
         self.tensor_network_level1 = SETensorNetworkModule(self.args,dim_size=self.args.filters_1 * self.scaler_dim)
-        self.fully_connected_first = torch.nn.Linear(self.feature_count, self.args.bottle_neck_neurons)
+        # self.fully_connected_first = torch.nn.Linear(self.feature_count, self.args.bottle_neck_neurons)
+        self.fully_connected_first_light = torch.nn.Linear(self.feature_count_light, self.args.bottle_neck_neurons)
+        
         self.scoring_layer = torch.nn.Linear(self.args.bottle_neck_neurons, 1)
        
-        self.score_attention = SEAttentionModule(self.args, self.feature_count)
+        # self.score_attention = SEAttentionModule(self.args, self.feature_count)
+        # light
+        self.score_attention_light = SEAttentionModule(self.args, self.feature_count_light) 
         
     def convolutional_pass_level1(self, edge_index, features):
         features = self.convolution_1(features, edge_index)
@@ -283,15 +292,19 @@ class EGSC_teacher(torch.nn.Module): # EGSC_teacher 相当于完成了学生网�
         pooled_features_level2_2 = self.attention_level2(features_level2_2, batch_2) # 128 * 32
         scores_level2 = self.tensor_network_level2(pooled_features_level2_1, pooled_features_level2_2) # 对应论文里的第2个Embedding Fusion Net
 
-        features_level3_1 = self.convolutional_pass_level3(edge_index_1, features_level2_1)
-        features_level3_2 = self.convolutional_pass_level3(edge_index_2, features_level2_2)
-        pooled_features_level3_1 = self.attention_level3(features_level3_1, batch_1) # 128 * 16
-        pooled_features_level3_2 = self.attention_level3(features_level3_2, batch_2) # 128 * 16
-        scores_level3 = self.tensor_network_level3(pooled_features_level3_1, pooled_features_level3_2) # 对应论文里的第3个Embedding Fusion Net
+        # features_level3_1 = self.convolutional_pass_level3(edge_index_1, features_level2_1)
+        # features_level3_2 = self.convolutional_pass_level3(edge_index_2, features_level2_2)
+        # pooled_features_level3_1 = self.attention_level3(features_level3_1, batch_1) # 128 * 16
+        # pooled_features_level3_2 = self.attention_level3(features_level3_2, batch_2) # 128 * 16
+        # scores_level3 = self.tensor_network_level3(pooled_features_level3_1, pooled_features_level3_2) # 对应论文里的第3个Embedding Fusion Net
 
-        scores = torch.cat((scores_level3, scores_level2, scores_level1), dim=1)
-        # print(f'[origin] scores.shape: {scores.shape}') # torch.Size([128, 56]) or torch.Size([48, 56])
-        scores = F.relu(self.fully_connected_first(self.score_attention(scores)*scores + scores))
+        # scores = torch.cat((scores_level3, scores_level2, scores_level1), dim=1)
+        scores = torch.cat((scores_level2, scores_level1), dim=1)
+        # print(f'[light] EGSC_teacher scores.shape: {scores.shape}')
+
+        # scores = F.relu(self.fully_connected_first(self.score_attention(scores)*scores + scores))
+        # light
+        scores = F.relu(self.fully_connected_first_light(self.score_attention_light(scores)*scores + scores))
         
         return  scores
 

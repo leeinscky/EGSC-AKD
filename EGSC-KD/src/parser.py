@@ -152,6 +152,16 @@ def parameter_parser():
                             default=16,
                             help="prediction output class in adversarial network")
 
+    parser.add_argument("--cuda-id",
+                            type=int,
+                            default=0,
+                            help="cuda device id")
+
+    parser.add_argument("--light",
+                            type=int,
+                            default=0,
+                            help="use light model")
+
     parser.set_defaults(histogram=False)
     parser.set_defaults(diffpool=False)
     parser.set_defaults(plot=False)
