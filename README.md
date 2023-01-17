@@ -5,9 +5,9 @@ This repo is developed based on [Efficient_Graph_Similarity_Computation](https:/
 ![EGSC](Figs/our-setting.png)
 
 ## Training and Evaluation
-[Train & Test with Teacher Model](https://github.com/leeinscky/EGSC-AKD/blob/main/EGSC-T/README.md)
+[1. Train & Test with Teacher Model](https://github.com/leeinscky/EGSC-AKD/blob/main/EGSC-T/README.md)
 
-[Train & Test with Student Model](https://github.com/leeinscky/EGSC-AKD/blob/main/EGSC-KD/README.md)
+[2. Train & Test with Student Model](https://github.com/leeinscky/EGSC-AKD/blob/main/EGSC-KD/README.md)
 
 ## Introduction
 <div>
