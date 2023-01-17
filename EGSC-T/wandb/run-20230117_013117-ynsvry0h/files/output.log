@@ -1,0 +1,20 @@
+Preparing dataset.
+模型参数，total_num: 70070，trainable_num: 70070
+模型参数，total_num: 17，trainable_num: 17
+Model training.
+Model evaluation.
+Epoch:   0%|                                                                                                                       | 0/1 [00:00<?, ?it/s]/home/zl525/rds/hpc-work/.conda/envs/Efficient-Graph-Similarity-Computation/lib/python3.9/site-packages/torch_geometric/deprecation.py:12: UserWarning: 'data.DataLoader' is deprecated, use 'loader.DataLoader' instead
+  warnings.warn(out)
+Batches: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 60.39it/s]
+Epoch (Loss=0.01833): 100%|████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00,  7.37it/s]
+
+
+
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████| 78400/78400 [00:07<00:00, 10726.22it/s]
+score_time_cost:  7.57576584815979
+mse(10^-3): 34.25207.
+Spearman's rho: 0.16759.
+Kendall's tau: 0.11435.
+p@10: 0.035.
+p@20: 0.09036.
+Model Saved
