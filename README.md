@@ -1,6 +1,6 @@
 # Efficient Graph Similarity Computation via Adversarial Knowledge Distillation - (EGSC-AKD)
 
-This repo is developed based on [Efficient_Graph_Similarity_Computation (https://github.com/canqin001/Efficient_Graph_Similarity_Computation)
+This repo is developed based on [Efficient_Graph_Similarity_Computation](https://github.com/canqin001/Efficient_Graph_Similarity_Computation)
 
 ![EGSC](Figs/our-setting.png)
 
