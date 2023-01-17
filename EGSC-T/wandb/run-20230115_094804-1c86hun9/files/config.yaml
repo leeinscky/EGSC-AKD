@@ -1,0 +1,87 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.7
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.9.0
+    start_time: 1673776084.887728
+    t:
+      1:
+      - 1
+      - 55
+      - 77
+      2:
+      - 1
+      - 55
+      - 77
+      3:
+      - 16
+      - 23
+      4: 3.9.0
+      5: 0.13.7
+      8:
+      - 6
+batch_size:
+  desc: null
+  value: 128
+bottle_neck_neurons:
+  desc: null
+  value: 16
+dataset:
+  desc: null
+  value: IMDBMulti
+dropout:
+  desc: null
+  value: 0
+epochs:
+  desc: null
+  value: 6000
+filters_1:
+  desc: null
+  value: 64
+filters_2:
+  desc: null
+  value: 32
+filters_3:
+  desc: null
+  value: 16
+filters_4:
+  desc: null
+  value: 8
+gnn_operator:
+  desc: null
+  value: gin
+learning_rate:
+  desc: null
+  value: 0.001
+load:
+  desc: null
+  value: false
+load_pretrain:
+  desc: null
+  value: false
+measure_time:
+  desc: null
+  value: false
+notify:
+  desc: null
+  value: false
+plot:
+  desc: null
+  value: false
+synth:
+  desc: null
+  value: false
+tensor_neurons:
+  desc: null
+  value: 16
+wandb:
+  desc: null
+  value: 1
+weight_decay:
+  desc: null
+  value: 0.0005

@@ -16,6 +16,7 @@ from torch_geometric.datasets import GEDDataset
 from torch_geometric.transforms import OneHotDegree
 
 import matplotlib.pyplot as plt
+from thop import profile
 
 from model_kd import EGSC_generator, EGSC_fusion, EGSC_fusion_classifier, EGSC_classifier, EGSC_teacher, logits_D, local_emb_D, global_emb_D
 
@@ -74,7 +75,33 @@ class EGSC_KD_Trainer(object):
         #         self.model_c1 = torch.nn.DataParallel(self.model_c1)
         #         # self.model_g_fix = torch.nn.DataParallel(self.model_g_fix)
         #         self.Discriminator = torch.nn.DataParallel(self.Discriminator)
+    
+        self.get_parameter_number(self.model_g) # 模型参数，total_num: 20995，trainable_num: 20995
+        self.get_parameter_number(self.model_f) # 模型参数，total_num: 52376，trainable_num: 52376
+        self.get_parameter_number(self.model_c) # 模型参数，total_num: 17，trainable_num: 17
+        self.get_parameter_number(self.model_c1) # 模型参数，total_num: 545，trainable_num: 545
+        self.get_parameter_number(self.model_g_fix) # 模型参数，total_num: 122038，trainable_num: 122038
         
+        """ thop
+        edge_index = torch.randint(1, 10, (2, 1600)) # https://runebook.dev/zh-CN/docs/pytorch/generated/torch.randint
+        features = torch.randn(800, 29)
+        batch = torch.randint(0, 799, (800,))
+        macs, params = profile(self.model_g, inputs=(edge_index, features, batch))
+        print('FLOPs: ', macs*2)   # 一般来讲，FLOPs是macs的两倍
+        print('params: ', params)
+        # 模型输入数据 edge_index_1.shape: torch.Size([2, 1600]) features_1.shape: torch.Size([800, 29]) batch_1.shape: torch.Size([800])
+        # edge_index_1=tensor([[   0,    0,    1,  ..., 1150, 1150, 1150],
+        #                     [   3,    8,    6,  ..., 1144, 1147, 1149]]), 
+        # features_1=tensor([[0., 0., 1.,  ..., 0., 0., 0.],
+        #                     [0., 0., 0.,  ..., 0., 0., 0.],
+        #                     [1., 0., 0.,  ..., 0., 0., 0.],
+        #                     ...,
+        #                     [0., 0., 0.,  ..., 0., 0., 0.],
+        #                     [0., 0., 0.,  ..., 0., 0., 0.],
+        #                     [0., 0., 1.,  ..., 0., 0., 0.]]), 
+        # batch_1=tensor([  0,   0,   0,  ..., 127, 127, 127])
+         """
+         
         self.model_g.to(self.device)
         self.model_f.to(self.device)
         self.model_c.to(self.device)
@@ -318,6 +345,12 @@ class EGSC_KD_Trainer(object):
 
         self.loss_RkdDistance = RkdDistance()
         self.loss_RKdAngle = RKdAngle()
+
+
+    def get_parameter_number(self, model):
+        total_num = sum(p.numel() for p in model.parameters())
+        trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f'模型参数，total_num: {total_num}，trainable_num: {trainable_num}')
 
     def load_model(self):
         PATH_g = '../Checkpoints/G_EarlyFusion_Disentangle_' +str(self.args.dataset) +'_gin'+'_checkpoint.pth'
@@ -581,6 +614,28 @@ class EGSC_KD_Trainer(object):
 
         # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，输入model_g之前 edge_index_1.shape={edge_index_1.shape}, features_1.shape={features_1.shape}, batch_1.shape={batch_1.shape}, edge_index_2.shape={edge_index_2.shape}, features_2.shape={features_2.shape}, batch_2.shape={batch_2.shape}")
         # print(f"[EGSC-KD/src/egsc_kd.py] 正在执行process_batch_adversarial函数，输入model_g之前 edge_index_1={edge_index_1}, features_1={features_1}, batch_1={batch_1}")
+        
+        
+
+        # 统计计算当前循环的batch时，模型参数量和计算量 https://www.cnblogs.com/picassooo/p/16343737.html
+        macs, params = profile(self.model_g, inputs=(edge_index_1, features_1, batch_1))
+        print('[thop-profile] model_g FLOPs-1: ', macs*2)   # 一般来讲，FLOPs是macs的两倍 
+        print('[thop-profile] model_g params-1: ', params) 
+        macs, params = profile(self.model_g, inputs=(edge_index_2, features_2, batch_2))
+        print('[thop-profile] model_g FLOPs-2: ', macs*2)   # 一般来讲，FLOPs是macs的两倍
+        print('[thop-profile] model_g params-2: ', params) 
+        macs, params = profile(self.model_g_fix, inputs=(edge_index_1, features_1, batch_1, edge_index_2, features_2, batch_2))
+        print('[thop-profile] model_g_fix FLOPs: ', macs*2)   # 一般来讲，FLOPs是macs的两倍
+        print('[thop-profile] model_g_fix params: ', params) 
+        """ 某一个batch的输出结果如下：
+        [thop-profile] model_g FLOPs-1:  8581120.0
+        [thop-profile] model_g params-1:  10240.0
+        [thop-profile] model_g FLOPs-2:  8765440.0
+        [thop-profile] model_g params-2:  10240.0
+        [thop-profile] model_g_fix FLOPs:  25749248.0
+        [thop-profile] model_g_fix params:  53810.0
+        """
+        
         
         """ 输入model_g之前的数据溯源和流转过程如下：
         
@@ -1233,7 +1288,7 @@ class EGSC_KD_Trainer(object):
         # 记录循环结束时的时间戳
         end_time = time.time()
         # 计算循环耗时，一共对比了140*560=78400个ged值
-        # print("score time cost: ", end_time - start_time) # CAM-HPC CPU： 6.491062164306641秒 ； CAM-HPC GPU： 3.4038896560668945秒
+        print("score time cost: ", end_time - start_time) # CAM-HPC CPU： 6.491062164306641秒 ； CAM-HPC GPU： 3.4038896560668945秒
         
         self.rho = np.mean(rho_list).item()
         self.tau = np.mean(tau_list).item()
@@ -1248,7 +1303,8 @@ class EGSC_KD_Trainer(object):
                 "prec_at_10": self.prec_at_10,
                 "prec_at_20": self.prec_at_20,
                 "model_error": self.model_error,
-                "run index": i})
+                # "run index": i
+                })
 
     def print_evaluation(self):
         """

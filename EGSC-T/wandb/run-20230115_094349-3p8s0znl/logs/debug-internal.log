@@ -1,0 +1,168 @@
+2023-01-15 09:43:49,963 INFO    StreamThr :30036 [internal.py:wandb_internal():87] W&B internal server running at pid: 30036, started at: 2023-01-15 09:43:49.961714
+2023-01-15 09:43:49,964 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: status
+2023-01-15 09:43:49,967 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: status
+2023-01-15 09:43:49,968 DEBUG   SenderThread:30036 [sender.py:send():303] send: header
+2023-01-15 09:43:49,968 INFO    WriterThread:30036 [datastore.py:open_for_write():75] open: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/run-3p8s0znl.wandb
+2023-01-15 09:43:49,986 DEBUG   SenderThread:30036 [sender.py:send():303] send: run
+2023-01-15 09:43:50,308 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: check_version
+2023-01-15 09:43:50,312 INFO    SenderThread:30036 [dir_watcher.py:__init__():216] watching files in: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files
+2023-01-15 09:43:50,312 INFO    SenderThread:30036 [sender.py:_start_run_threads():928] run started: 3p8s0znl with start time 1673775829.957655
+2023-01-15 09:43:50,312 DEBUG   SenderThread:30036 [sender.py:send():303] send: summary
+2023-01-15 09:43:50,314 INFO    SenderThread:30036 [sender.py:_save_file():1171] saving file wandb-summary.json with policy end
+2023-01-15 09:43:50,315 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: check_version
+2023-01-15 09:43:50,383 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: run_start
+2023-01-15 09:43:50,389 DEBUG   HandlerThread:30036 [system_info.py:__init__():31] System info init
+2023-01-15 09:43:50,389 DEBUG   HandlerThread:30036 [system_info.py:__init__():46] System info init done
+2023-01-15 09:43:50,389 INFO    HandlerThread:30036 [system_monitor.py:start():150] Starting system monitor
+2023-01-15 09:43:50,389 INFO    SystemMonitor:30036 [system_monitor.py:_start():116] Starting system asset monitoring threads
+2023-01-15 09:43:50,390 INFO    HandlerThread:30036 [system_monitor.py:probe():171] Collecting system info
+2023-01-15 09:43:50,390 INFO    SystemMonitor:30036 [interfaces.py:start():168] Started cpu
+2023-01-15 09:43:50,390 INFO    SystemMonitor:30036 [interfaces.py:start():168] Started disk
+2023-01-15 09:43:50,390 INFO    SystemMonitor:30036 [interfaces.py:start():168] Started gpu
+2023-01-15 09:43:50,390 INFO    SystemMonitor:30036 [interfaces.py:start():168] Started memory
+2023-01-15 09:43:50,391 INFO    SystemMonitor:30036 [interfaces.py:start():168] Started network
+2023-01-15 09:43:50,423 DEBUG   HandlerThread:30036 [system_info.py:probe():195] Probing system
+2023-01-15 09:43:50,431 DEBUG   HandlerThread:30036 [system_info.py:_probe_git():180] Probing git
+2023-01-15 09:43:50,449 DEBUG   HandlerThread:30036 [system_info.py:_probe_git():188] Probing git done
+2023-01-15 09:43:50,449 DEBUG   HandlerThread:30036 [system_info.py:probe():241] Probing system done
+2023-01-15 09:43:50,449 DEBUG   HandlerThread:30036 [system_monitor.py:probe():180] {'os': 'Linux-4.18.0-372.32.1.el8_6.x86_64-x86_64-with-glibc2.28', 'python': '3.9.0', 'heartbeatAt': '2023-01-15T09:43:50.423593', 'startedAt': '2023-01-15T09:43:49.932347', 'docker': None, 'cuda': None, 'args': ('--dataset=AIDS700nef', '--gnn-operator=gin', '--epochs=6000', '--batch-size=128', '--learning-rate=0.001'), 'state': 'running', 'program': '/home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/src/main.py', 'codePath': 'EGSC-T/src/main.py', 'git': {'remote': 'https://github.com/leeinscky/Efficient_Graph_Similarity_Computation.git', 'commit': '1f8404082bb4ff11fb3a0672d845e8ae58ba786c'}, 'email': '1009694687@qq.com', 'root': '/home/zl525/code/Efficient_Graph_Similarity_Computation', 'host': 'gpu-q-18', 'username': 'zl525', 'executable': '/home/zl525/rds/hpc-work/.conda/envs/Efficient-Graph-Similarity-Computation/bin/python', 'cpu_count': 128, 'cpu_count_logical': 128, 'cpu_freq': {'current': 2455.742375000004, 'min': 0.0, 'max': 0.0}, 'cpu_freq_per_core': [{'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 3177.432, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 3014.386, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}, {'current': 2445.581, 'min': 0.0, 'max': 0.0}], 'disk': {'total': 1396.5678596496582, 'used': 27.003982543945312}, 'gpu': 'NVIDIA A100-SXM4-80GB', 'gpu_count': 4, 'gpu_devices': [{'name': 'NVIDIA A100-SXM4-80GB', 'memory_total': 85899345920}, {'name': 'NVIDIA A100-SXM4-80GB', 'memory_total': 85899345920}, {'name': 'NVIDIA A100-SXM4-80GB', 'memory_total': 85899345920}, {'name': 'NVIDIA A100-SXM4-80GB', 'memory_total': 85899345920}], 'memory': {'total': 1007.0753402709961}}
+2023-01-15 09:43:50,450 INFO    HandlerThread:30036 [system_monitor.py:probe():181] Finished collecting system info
+2023-01-15 09:43:50,450 INFO    HandlerThread:30036 [system_monitor.py:probe():184] Publishing system info
+2023-01-15 09:43:50,450 DEBUG   HandlerThread:30036 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-01-15 09:43:50,452 DEBUG   HandlerThread:30036 [system_info.py:_save_pip():67] Saving pip packages done
+2023-01-15 09:43:50,452 DEBUG   HandlerThread:30036 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-01-15 09:43:51,315 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_created():275] file/dir created: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/conda-environment.yaml
+2023-01-15 09:43:51,316 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_created():275] file/dir created: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-summary.json
+2023-01-15 09:43:51,316 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_created():275] file/dir created: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/requirements.txt
+2023-01-15 09:43:51,846 DEBUG   HandlerThread:30036 [system_info.py:_save_conda():86] Saving conda packages done
+2023-01-15 09:43:51,851 INFO    HandlerThread:30036 [system_monitor.py:probe():186] Finished publishing system info
+2023-01-15 09:43:51,856 DEBUG   SenderThread:30036 [sender.py:send():303] send: files
+2023-01-15 09:43:51,856 INFO    SenderThread:30036 [sender.py:_save_file():1171] saving file wandb-metadata.json with policy now
+2023-01-15 09:43:51,863 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: stop_status
+2023-01-15 09:43:51,863 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: stop_status
+2023-01-15 09:43:52,001 DEBUG   SenderThread:30036 [sender.py:send():303] send: telemetry
+2023-01-15 09:43:52,300 INFO    Thread-16 :30036 [upload_job.py:push():143] Uploaded file /tmp/tmppakfe5yawandb/rmfn3af4-wandb-metadata.json
+2023-01-15 09:43:52,315 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/conda-environment.yaml
+2023-01-15 09:43:52,315 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_created():275] file/dir created: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/output.log
+2023-01-15 09:43:52,315 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_created():275] file/dir created: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-metadata.json
+2023-01-15 09:43:54,020 DEBUG   SenderThread:30036 [sender.py:send():303] send: exit
+2023-01-15 09:43:54,021 INFO    SenderThread:30036 [sender.py:send_exit():442] handling exit code: 255
+2023-01-15 09:43:54,021 INFO    SenderThread:30036 [sender.py:send_exit():444] handling runtime: 3
+2023-01-15 09:43:54,024 INFO    SenderThread:30036 [sender.py:_save_file():1171] saving file wandb-summary.json with policy end
+2023-01-15 09:43:54,024 INFO    SenderThread:30036 [sender.py:send_exit():450] send defer
+2023-01-15 09:43:54,025 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,025 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 0
+2023-01-15 09:43:54,025 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,025 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 0
+2023-01-15 09:43:54,025 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 1
+2023-01-15 09:43:54,025 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,025 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 1
+2023-01-15 09:43:54,026 INFO    HandlerThread:30036 [system_monitor.py:finish():160] Stopping system monitor
+2023-01-15 09:43:54,026 DEBUG   SystemMonitor:30036 [system_monitor.py:_start():130] Starting system metrics aggregation loop
+2023-01-15 09:43:54,026 DEBUG   SystemMonitor:30036 [system_monitor.py:_start():137] Finished system metrics aggregation loop
+2023-01-15 09:43:54,026 DEBUG   SystemMonitor:30036 [system_monitor.py:_start():141] Publishing last batch of metrics
+2023-01-15 09:43:54,028 INFO    HandlerThread:30036 [interfaces.py:finish():175] Joined cpu
+2023-01-15 09:43:54,028 INFO    HandlerThread:30036 [interfaces.py:finish():175] Joined disk
+2023-01-15 09:43:54,317 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/output.log
+2023-01-15 09:43:54,317 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-summary.json
+2023-01-15 09:43:54,500 INFO    HandlerThread:30036 [interfaces.py:finish():175] Joined gpu
+2023-01-15 09:43:54,500 INFO    HandlerThread:30036 [interfaces.py:finish():175] Joined memory
+2023-01-15 09:43:54,500 INFO    HandlerThread:30036 [interfaces.py:finish():175] Joined network
+2023-01-15 09:43:54,500 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,501 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 1
+2023-01-15 09:43:54,501 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 2
+2023-01-15 09:43:54,501 DEBUG   SenderThread:30036 [sender.py:send():303] send: stats
+2023-01-15 09:43:54,502 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,502 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 2
+2023-01-15 09:43:54,502 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,502 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 2
+2023-01-15 09:43:54,502 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 3
+2023-01-15 09:43:54,502 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,502 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 3
+2023-01-15 09:43:54,503 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,503 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 3
+2023-01-15 09:43:54,503 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 4
+2023-01-15 09:43:54,503 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,503 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 4
+2023-01-15 09:43:54,503 DEBUG   SenderThread:30036 [sender.py:send():303] send: summary
+2023-01-15 09:43:54,506 INFO    SenderThread:30036 [sender.py:_save_file():1171] saving file wandb-summary.json with policy end
+2023-01-15 09:43:54,506 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,506 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 4
+2023-01-15 09:43:54,506 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 5
+2023-01-15 09:43:54,506 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,507 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 5
+2023-01-15 09:43:54,507 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,507 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 5
+2023-01-15 09:43:54,677 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 6
+2023-01-15 09:43:54,678 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:54,678 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 6
+2023-01-15 09:43:54,678 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:54,678 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 6
+2023-01-15 09:43:55,021 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: poll_exit
+2023-01-15 09:43:55,318 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/config.yaml
+2023-01-15 09:43:55,319 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-summary.json
+2023-01-15 09:43:56,049 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 7
+2023-01-15 09:43:56,049 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: poll_exit
+2023-01-15 09:43:56,049 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:56,050 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 7
+2023-01-15 09:43:56,050 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:56,050 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 7
+2023-01-15 09:43:56,050 INFO    SenderThread:30036 [dir_watcher.py:finish():362] shutting down directory watcher
+2023-01-15 09:43:56,319 INFO    Thread-13 :30036 [dir_watcher.py:_on_file_modified():292] file/dir modified: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/output.log
+2023-01-15 09:43:56,320 INFO    SenderThread:30036 [dir_watcher.py:finish():392] scan: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files
+2023-01-15 09:43:56,320 INFO    SenderThread:30036 [dir_watcher.py:finish():406] scan save: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/conda-environment.yaml conda-environment.yaml
+2023-01-15 09:43:56,320 INFO    SenderThread:30036 [dir_watcher.py:finish():406] scan save: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/config.yaml config.yaml
+2023-01-15 09:43:56,320 INFO    SenderThread:30036 [dir_watcher.py:finish():406] scan save: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-metadata.json wandb-metadata.json
+2023-01-15 09:43:56,321 INFO    SenderThread:30036 [dir_watcher.py:finish():406] scan save: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/requirements.txt requirements.txt
+2023-01-15 09:43:56,324 INFO    SenderThread:30036 [dir_watcher.py:finish():406] scan save: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/output.log output.log
+2023-01-15 09:43:56,329 INFO    SenderThread:30036 [dir_watcher.py:finish():406] scan save: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-summary.json wandb-summary.json
+2023-01-15 09:43:56,330 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 8
+2023-01-15 09:43:56,330 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:56,330 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 8
+2023-01-15 09:43:56,333 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:56,333 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 8
+2023-01-15 09:43:56,333 INFO    SenderThread:30036 [file_pusher.py:finish():168] shutting down file pusher
+2023-01-15 09:43:56,796 INFO    Thread-20 :30036 [upload_job.py:push():143] Uploaded file /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/output.log
+2023-01-15 09:43:56,801 INFO    Thread-18 :30036 [upload_job.py:push():143] Uploaded file /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/config.yaml
+2023-01-15 09:43:56,814 INFO    Thread-17 :30036 [upload_job.py:push():143] Uploaded file /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/conda-environment.yaml
+2023-01-15 09:43:56,840 INFO    Thread-21 :30036 [upload_job.py:push():143] Uploaded file /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/wandb-summary.json
+2023-01-15 09:43:56,857 INFO    Thread-19 :30036 [upload_job.py:push():143] Uploaded file /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/files/requirements.txt
+2023-01-15 09:43:57,057 INFO    Thread-12 :30036 [sender.py:transition_state():463] send defer: 9
+2023-01-15 09:43:57,057 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:57,057 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 9
+2023-01-15 09:43:57,058 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:57,058 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 9
+2023-01-15 09:43:57,058 INFO    SenderThread:30036 [file_pusher.py:join():173] waiting for file pusher
+2023-01-15 09:43:57,058 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 10
+2023-01-15 09:43:57,058 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:57,058 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 10
+2023-01-15 09:43:57,058 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:57,059 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 10
+2023-01-15 09:43:57,207 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 11
+2023-01-15 09:43:57,208 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:57,208 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 11
+2023-01-15 09:43:57,208 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:57,208 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 11
+2023-01-15 09:43:57,208 INFO    SenderThread:30036 [sender.py:transition_state():463] send defer: 12
+2023-01-15 09:43:57,208 DEBUG   SenderThread:30036 [sender.py:send():303] send: final
+2023-01-15 09:43:57,209 DEBUG   SenderThread:30036 [sender.py:send():303] send: footer
+2023-01-15 09:43:57,209 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: defer
+2023-01-15 09:43:57,209 INFO    HandlerThread:30036 [handler.py:handle_request_defer():162] handle defer: 12
+2023-01-15 09:43:57,209 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: defer
+2023-01-15 09:43:57,209 INFO    SenderThread:30036 [sender.py:send_request_defer():459] handle sender defer: 12
+2023-01-15 09:43:57,210 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: poll_exit
+2023-01-15 09:43:57,210 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: poll_exit
+2023-01-15 09:43:57,210 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: server_info
+2023-01-15 09:43:57,211 DEBUG   SenderThread:30036 [sender.py:send_request():317] send_request: server_info
+2023-01-15 09:43:57,214 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: get_summary
+2023-01-15 09:43:57,215 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: sampled_history
+2023-01-15 09:43:57,484 INFO    MainThread:30036 [wandb_run.py:_footer_history_summary_info():3408] rendering history
+2023-01-15 09:43:57,485 INFO    MainThread:30036 [wandb_run.py:_footer_history_summary_info():3440] rendering summary
+2023-01-15 09:43:57,485 INFO    MainThread:30036 [wandb_run.py:_footer_sync_info():3364] logging synced files
+2023-01-15 09:43:57,485 DEBUG   HandlerThread:30036 [handler.py:handle_request():139] handle_request: shutdown
+2023-01-15 09:43:57,485 INFO    HandlerThread:30036 [handler.py:finish():814] shutting down handler
+2023-01-15 09:43:58,208 INFO    WriterThread:30036 [datastore.py:close():279] close: /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T/wandb/run-20230115_094349-3p8s0znl/run-3p8s0znl.wandb
+2023-01-15 09:43:58,484 INFO    SenderThread:30036 [sender.py:finish():1331] shutting down sender
+2023-01-15 09:43:58,484 INFO    SenderThread:30036 [file_pusher.py:finish():168] shutting down file pusher
+2023-01-15 09:43:58,484 INFO    SenderThread:30036 [file_pusher.py:join():173] waiting for file pusher
+2023-01-15 09:43:58,489 INFO    MainThread:30036 [internal.py:handle_exit():77] Internal process exited

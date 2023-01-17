@@ -93,6 +93,11 @@ def parameter_parser():
                         action="store_true",
                         help="Send notification message when the code is finished (only Linux & Mac OS support).")
 
+    parser.add_argument("--wandb",
+                            type=int,
+                            default=1,
+                            help="use wandb")
+
     parser.set_defaults(plot=False)
     parser.set_defaults(load_pretrain=False)
     parser.set_defaults(measure_time=False)

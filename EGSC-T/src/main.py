@@ -1,12 +1,14 @@
 from utils import tab_printer
 from egsc import EGSCTrainer
 from parser import parameter_parser
-
+import wandb
 
 def main():
     # python src/main_kd.py --dataset AIDS700nef --gnn-operator gin --epochs 6000 --batch-size 128 --learning-rate 0.001
     args = parameter_parser()
     tab_printer(args)
+    if args.wandb:
+        wandb.init(config=args, project="Efficient_Graph_Similarity_Computation_EGSC-T", settings=wandb.Settings(start_method="fork"))
     trainer = EGSCTrainer(args)
     
     trainer.fit()

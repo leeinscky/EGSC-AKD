@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 from model import EGSCT_generator, EGSCT_classifier
 
 import pdb
+import wandb
+import time
 
 class EGSCTrainer(object):
     def __init__(self, args):
@@ -41,6 +43,12 @@ class EGSCTrainer(object):
         """
         self.model_g = EGSCT_generator(self.args, self.number_of_labels)
         self.model_c = EGSCT_classifier(self.args, self.number_of_labels)
+        
+        self.get_parameter_number(self.model_g)
+        self.get_parameter_number(self.model_c)
+        # 模型参数，total_num: 70070，trainable_num: 70070
+        # 模型参数，total_num: 17，trainable_num: 17
+        
         # print(f'[EGSC-T/src/egsc.py] 正在执行setup_model函数 self.model_g={self.model_g}, self.model_c={self.model_c}')
         """ [EGSC-T/src/egsc.py] 正在执行setup_model函数 self.model_g=EGSCT_generator(
         (convolution_1): GINConv(nn=Sequential(
@@ -161,6 +169,12 @@ class EGSCTrainer(object):
         ), self.model_c=EGSCT_classifier(
         (scoring_layer): Linear(in_features=16, out_features=1, bias=True)
         ) """
+
+
+    def get_parameter_number(self, model):
+        total_num = sum(p.numel() for p in model.parameters())
+        trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        print(f'模型参数，total_num: {total_num}，trainable_num: {trainable_num}')
 
     def save_model(self):
         """
@@ -381,6 +395,8 @@ class EGSCTrainer(object):
         
         t = tqdm(total=len(self.testing_graphs)*len(self.training_graphs))
 
+        # 记录当前时间戳
+        start_time = time.time()
         for i, g in enumerate(self.testing_graphs): 
             source_batch = Batch.from_data_list([g]*len(self.training_graphs)) # 生成一个batch，[g]*len(self.training_graphs)表示将g重复len(self.training_graphs)次, 生成一个长度为len(self.training_graphs)的列表, 列表中的每个元素都是g, 这个列表就是source_batch中的图, 也就是说source_batch中包含了len(self.training_graphs)个g, 这些g都是测试集中的图
             target_batch = Batch.from_data_list(self.training_graphs) # 生成一个batch，里面包含了训练集中的所有图, 这些图都是训练集中的图
@@ -402,6 +418,11 @@ class EGSCTrainer(object):
             prec_at_20_list.append(calculate_prec_at_k(20, prediction_mat[i], ground_truth[i], ground_truth_ged[i]))
 
             t.update(len(self.training_graphs))
+        # 记录循环结束时的时间戳
+        end_time = time.time()
+        # 计算循环耗时，一共对比了140*560=78400个ged值
+        score_time_cost = end_time - start_time
+        print('score_time_cost: ', score_time_cost)
 
         self.rho = np.mean(rho_list).item()
         self.tau = np.mean(tau_list).item()
@@ -409,6 +430,15 @@ class EGSCTrainer(object):
         self.prec_at_20 = np.mean(prec_at_20_list).item()
         self.model_error = np.mean(scores).item()
         self.print_evaluation()
+        if self.args.wandb:
+            wandb.log({
+                "rho": self.rho,
+                "tau": self.tau,
+                "prec_at_10": self.prec_at_10,
+                "prec_at_20": self.prec_at_20,
+                "model_error": self.model_error,
+                "score_time_cost": score_time_cost})
+
 
     def print_evaluation(self):
         """
