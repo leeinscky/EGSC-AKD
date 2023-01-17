@@ -4,7 +4,7 @@ from parser import parameter_parser
 import wandb
 
 def main():
-    # python src/main_kd.py --dataset AIDS700nef --gnn-operator gin --epochs 6000 --batch-size 128 --learning-rate 0.001
+    
     args = parameter_parser()
     tab_printer(args)
     if args.wandb:

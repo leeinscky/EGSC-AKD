@@ -143,10 +143,6 @@ def parameter_parser():
                             default=1,
                             help="use wandb")
 
-    # parser.add_argument("--stu_loss_type",
-    #                         default="all",
-    #                         help="loss type")
-
     parser.add_argument("--adversarial_ouput_class",
                             type=int,
                             default=16,

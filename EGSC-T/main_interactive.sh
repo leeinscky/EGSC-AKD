@@ -1,5 +1,5 @@
 
-cd /home/zl525/code/Efficient_Graph_Similarity_Computation/EGSC-T && conda activate Efficient-Graph-Similarity-Computation
+cd ~/code/EGSC-AKD/EGSC-T && conda activate Efficient-Graph-Similarity-Computation
 
 # epochs=1
 python src/main.py --dataset=AIDS700nef --gnn-operator=gin --epochs=1 --batch-size=128 --wandb=1

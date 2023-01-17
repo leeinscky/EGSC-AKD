@@ -1,5 +1,3 @@
-# linux 后台执行多条命令，不打印输出到终端
-
 cd ~/code/Efficient_Graph_Similarity_Computation/EGSC-KD/
 
 # # epochs=3000

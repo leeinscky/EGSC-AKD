@@ -261,8 +261,4 @@ def draw_weighted_nodes(filename, g, model):
 
     nx.draw(G, node_color=coefs.tolist(), cmap=plt.cm.Reds, labels=labels, vmin=vmin, vmax=vmax)
 
-    # sm = plt.cm.ScalarMappable(cmap=plt.cm.Reds, norm=plt.Normalize(vmin=vmin, vmax=vmax))
-    # sm.set_array(coefs.tolist())
-    # cbar = plt.colorbar(sm)
-
     plt.savefig(filename)
